@@ -45,8 +45,8 @@ type MessageServiceClient interface {
 	DeleteMessageBox(ctx context.Context, in *MessageBoxIdentifier, opts ...grpc.CallOption) (*ActionResponse, error)
 	GetMessageBox(ctx context.Context, in *MessageBoxIdentifier, opts ...grpc.CallOption) (*UserGroup, error)
 	GetMessageBoxOfUser(ctx context.Context, in *UserIdentifier, opts ...grpc.CallOption) (*BoxGroup, error)
-	RemoveUserFromBox(ctx context.Context, in *MessageBoxIdentifier, opts ...grpc.CallOption) (*ActionResponse, error)
-	AddUserToBox(ctx context.Context, in *AddUserToBoxRequest, opts ...grpc.CallOption) (*ActionResponse, error)
+	RemoveUserFromBox(ctx context.Context, in *UserBox, opts ...grpc.CallOption) (*ActionResponse, error)
+	AddUserToBox(ctx context.Context, in *UserBox, opts ...grpc.CallOption) (*ActionResponse, error)
 }
 
 type messageServiceClient struct {
@@ -138,7 +138,7 @@ func (c *messageServiceClient) GetMessageBoxOfUser(ctx context.Context, in *User
 	return out, nil
 }
 
-func (c *messageServiceClient) RemoveUserFromBox(ctx context.Context, in *MessageBoxIdentifier, opts ...grpc.CallOption) (*ActionResponse, error) {
+func (c *messageServiceClient) RemoveUserFromBox(ctx context.Context, in *UserBox, opts ...grpc.CallOption) (*ActionResponse, error) {
 	out := new(ActionResponse)
 	err := c.cc.Invoke(ctx, MessageService_RemoveUserFromBox_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -147,7 +147,7 @@ func (c *messageServiceClient) RemoveUserFromBox(ctx context.Context, in *Messag
 	return out, nil
 }
 
-func (c *messageServiceClient) AddUserToBox(ctx context.Context, in *AddUserToBoxRequest, opts ...grpc.CallOption) (*ActionResponse, error) {
+func (c *messageServiceClient) AddUserToBox(ctx context.Context, in *UserBox, opts ...grpc.CallOption) (*ActionResponse, error) {
 	out := new(ActionResponse)
 	err := c.cc.Invoke(ctx, MessageService_AddUserToBox_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -169,8 +169,8 @@ type MessageServiceServer interface {
 	DeleteMessageBox(context.Context, *MessageBoxIdentifier) (*ActionResponse, error)
 	GetMessageBox(context.Context, *MessageBoxIdentifier) (*UserGroup, error)
 	GetMessageBoxOfUser(context.Context, *UserIdentifier) (*BoxGroup, error)
-	RemoveUserFromBox(context.Context, *MessageBoxIdentifier) (*ActionResponse, error)
-	AddUserToBox(context.Context, *AddUserToBoxRequest) (*ActionResponse, error)
+	RemoveUserFromBox(context.Context, *UserBox) (*ActionResponse, error)
+	AddUserToBox(context.Context, *UserBox) (*ActionResponse, error)
 	mustEmbedUnimplementedMessageServiceServer()
 }
 
@@ -205,10 +205,10 @@ func (UnimplementedMessageServiceServer) GetMessageBox(context.Context, *Message
 func (UnimplementedMessageServiceServer) GetMessageBoxOfUser(context.Context, *UserIdentifier) (*BoxGroup, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMessageBoxOfUser not implemented")
 }
-func (UnimplementedMessageServiceServer) RemoveUserFromBox(context.Context, *MessageBoxIdentifier) (*ActionResponse, error) {
+func (UnimplementedMessageServiceServer) RemoveUserFromBox(context.Context, *UserBox) (*ActionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveUserFromBox not implemented")
 }
-func (UnimplementedMessageServiceServer) AddUserToBox(context.Context, *AddUserToBoxRequest) (*ActionResponse, error) {
+func (UnimplementedMessageServiceServer) AddUserToBox(context.Context, *UserBox) (*ActionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddUserToBox not implemented")
 }
 func (UnimplementedMessageServiceServer) mustEmbedUnimplementedMessageServiceServer() {}
@@ -387,7 +387,7 @@ func _MessageService_GetMessageBoxOfUser_Handler(srv interface{}, ctx context.Co
 }
 
 func _MessageService_RemoveUserFromBox_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MessageBoxIdentifier)
+	in := new(UserBox)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -399,13 +399,13 @@ func _MessageService_RemoveUserFromBox_Handler(srv interface{}, ctx context.Cont
 		FullMethod: MessageService_RemoveUserFromBox_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MessageServiceServer).RemoveUserFromBox(ctx, req.(*MessageBoxIdentifier))
+		return srv.(MessageServiceServer).RemoveUserFromBox(ctx, req.(*UserBox))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _MessageService_AddUserToBox_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddUserToBoxRequest)
+	in := new(UserBox)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -417,7 +417,7 @@ func _MessageService_AddUserToBox_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: MessageService_AddUserToBox_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MessageServiceServer).AddUserToBox(ctx, req.(*AddUserToBoxRequest))
+		return srv.(MessageServiceServer).AddUserToBox(ctx, req.(*UserBox))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/hungq1205/watch-party/users";
+option go_package = "github.com/hungq1205/watch-party/protogen/users";
 
 service UserService {
     rpc SignUp(SignUpRequest) returns (SignUpResponse) {}

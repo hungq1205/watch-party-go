@@ -74,7 +74,7 @@ func (s *MovieService) CreateBox(ctx context.Context, req *movies.CreateRequest)
 	return &movies.MovieBoxIdentifier{BoxId: box_id}, nil
 }
 
-func (s *MovieService) AddToBox(ctx context.Context, req *movies.UserBoxRequest) (*movies.ActionResponse, error) {
+func (s *MovieService) AddToBox(ctx context.Context, req *movies.UserBoxRequest) (*movies.MovieActionResponse, error) {
 	mv_lock.Lock()
 	defer mv_lock.Unlock()
 
@@ -89,10 +89,10 @@ func (s *MovieService) AddToBox(ctx context.Context, req *movies.UserBoxRequest)
 		return nil, err
 	}
 
-	return &movies.ActionResponse{Success: true}, nil
+	return &movies.MovieActionResponse{Success: true}, nil
 }
 
-func (s *MovieService) RemoveFromBox(ctx context.Context, req *movies.UserBoxRequest) (*movies.ActionResponse, error) {
+func (s *MovieService) RemoveFromBox(ctx context.Context, req *movies.UserBoxRequest) (*movies.MovieActionResponse, error) {
 	mv_lock.Lock()
 	defer mv_lock.Unlock()
 
@@ -112,7 +112,7 @@ func (s *MovieService) RemoveFromBox(ctx context.Context, req *movies.UserBoxReq
 		return nil, err
 	}
 
-	return &movies.ActionResponse{Success: aff > 0}, nil
+	return &movies.MovieActionResponse{Success: aff > 0}, nil
 }
 
 func (s *MovieService) GetBox(ctx context.Context, req *movies.MovieBoxIdentifier) (*movies.MovieBox, error) {
@@ -144,7 +144,7 @@ func (s *MovieService) GetBox(ctx context.Context, req *movies.MovieBoxIdentifie
 	return &box, nil
 }
 
-func (s *MovieService) SetBox(ctx context.Context, req *movies.MovieBox) (*movies.ActionResponse, error) {
+func (s *MovieService) SetBox(ctx context.Context, req *movies.MovieBox) (*movies.MovieActionResponse, error) {
 	mv_lock.Lock()
 	defer mv_lock.Unlock()
 
@@ -159,10 +159,10 @@ func (s *MovieService) SetBox(ctx context.Context, req *movies.MovieBox) (*movie
 		return nil, err
 	}
 
-	return &movies.ActionResponse{Success: true}, nil
+	return &movies.MovieActionResponse{Success: true}, nil
 }
 
-func (s *MovieService) UserOfBox(ctx context.Context, req *movies.MovieBoxIdentifier) (*movies.UserGroup, error) {
+func (s *MovieService) UserOfBox(ctx context.Context, req *movies.MovieBoxIdentifier) (*movies.UserOfBoxResponse, error) {
 	mv_lock.Lock()
 	defer mv_lock.Unlock()
 
@@ -188,7 +188,7 @@ func (s *MovieService) UserOfBox(ctx context.Context, req *movies.MovieBoxIdenti
 		userIds = append(userIds, userId)
 	}
 
-	return &movies.UserGroup{UserIds: userIds}, nil
+	return &movies.UserOfBoxResponse{UserIds: userIds}, nil
 }
 
 func (s *MovieService) GetMovie(ctx context.Context, req *movies.MovieIdentifier) (*movies.Movie, error) {

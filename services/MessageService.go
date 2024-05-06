@@ -30,14 +30,14 @@ func (s *MessageService) Start() (*grpc.Server, error) {
 	}
 	sv := grpc.NewServer()
 
-	msgService := &MmessageService{}
+	msgService := &MessageService{}
 	messages.RegisterMessageServiceServer(sv, msgService)
 	err = sv.Serve(lis)
 
 	return sv, err
 }
 
-func (s *MessageService) RemoveUserFromBox(ctx context.Context, req *mes.MessageBoxIdentifier) (*mes.ActionResponse, error) {
+func (s *MessageService) RemoveUserFromBox(ctx context.Context, req *mes.UserBox) (*mes.ActionResponse, error) {
 	msg_lock.Lock()
 	defer msg_lock.Unlock()
 
@@ -47,7 +47,7 @@ func (s *MessageService) RemoveUserFromBox(ctx context.Context, req *mes.Message
 	}
 	defer db.Close()
 
-	row, err := db.Exec("DELETE FROM MsgBox_user WHERE user_id=?", req.UserId)
+	row, err := db.Exec("DELETE FROM MsgBox_user WHERE user_id=? AND box_id=?", req.UserId, req.BoxId)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (s *MessageService) RemoveUserFromBox(ctx context.Context, req *mes.Message
 	return &mes.ActionResponse{Success: aff > 0}, nil
 }
 
-func (s *MessageService) AddUserToBox(ctx context.Context, req *mes.AddUserToBoxRequest) (*mes.ActionResponse, error) {
+func (s *MessageService) AddUserToBox(ctx context.Context, req *mes.UserBox) (*mes.ActionResponse, error) {
 	msg_lock.Lock()
 	defer msg_lock.Unlock()
 

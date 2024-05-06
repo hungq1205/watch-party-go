@@ -12,19 +12,6 @@
             "name": "user_service_conn",
             "database": "user_service",
             "username": "root"
-        },
-        {
-            "mysqlOptions": {
-                "authProtocol": "default",
-                "enableSsl": "Disabled"
-            },
-            "previewLimit": 50,
-            "server": "localhost",
-            "port": 3306,
-            "driver": "MySQL",
-            "name": "message_service_conn",
-            "database": "message_service",
-            "username": "root"
         }
     ]
 }

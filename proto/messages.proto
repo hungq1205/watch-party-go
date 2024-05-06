@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/hungq1205/watch-party/messages";
+option go_package = "github.com/hungq1205/watch-party/protogen/messages";
 
 service MessageService {
     rpc Sent(SentRequest) returns (MessageIdentifier) {}
@@ -13,8 +13,8 @@ service MessageService {
     rpc DeleteMessageBox(MessageBoxIdentifier) returns (ActionResponse) {}
     rpc GetMessageBox(MessageBoxIdentifier) returns (UserGroup) {}
     rpc GetMessageBoxOfUser(UserIdentifier) returns (BoxGroup) {}
-    rpc RemoveUserFromBox(MessageBoxIdentifier) returns (ActionResponse) {}
-    rpc AddUserToBox(AddUserToBoxRequest) returns (ActionResponse) {}
+    rpc RemoveUserFromBox(UserBox) returns (ActionResponse) {}
+    rpc AddUserToBox(UserBox) returns (ActionResponse) {}
 }
 
 message BoxGroup {
@@ -33,7 +33,7 @@ message MessageBoxIdentifier {
     int64 BoxId = 1;
 }
 
-message AddUserToBoxRequest {
+message UserBox {
     int64 BoxId = 1;
     int64 UserId = 2;
 }

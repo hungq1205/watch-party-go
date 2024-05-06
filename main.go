@@ -1,29 +1,37 @@
 package main
 
 import (
+	"fmt"
 	"log"
-	"net"
 
-	"github.com/hungq1205/watch-party/protogen/users"
 	"github.com/hungq1205/watch-party/services"
-	"google.golang.org/grpc"
 )
 
-const userServicePort = ":3001"
-const messageServicePort = ":3002"
-
 func main() {
-	lis, err := net.Listen("tcp", userServicePort)
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-	}
-	s := grpc.NewServer()
-	defer s.Stop()
+	// userService, err := (&services.UserService{}).Start()
+	// if err != nil {
+	// 	log.Fatal("Failed to start user service")
+	// }
+	// defer userService.Stop()
+	// fmt.Print("Started user service")
 
-	userService := &services.UserService{}
-	users.RegisterUserServiceServer(s, userService)
-	err = s.Serve(lis)
+	// msgService, err := (&services.MessageService{}).Start()
+	// if err != nil {
+	// 	log.Fatal("Failed to start message service")
+	// }
+	// defer msgService.Stop()
+	// fmt.Print("Started message service")
+
+	// movieService, err := (&services.MovieService{}).Start()
+	// if err != nil {
+	// 	log.Fatal("Failed to start movie service")
+	// }
+	// defer movieService.Stop()
+	// fmt.Print("Started movie service")
+
+	_, err := (&services.RenderService{}).Start()
 	if err != nil {
-		log.Fatalf("Failed to serve: %v", err)
+		log.Fatal("Failed to start render service")
 	}
+	fmt.Print("Started render service")
 }

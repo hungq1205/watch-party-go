@@ -33,11 +33,11 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MovieServiceClient interface {
 	CreateBox(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*MovieBoxIdentifier, error)
-	AddToBox(ctx context.Context, in *UserBoxRequest, opts ...grpc.CallOption) (*ActionResponse, error)
-	RemoveFromBox(ctx context.Context, in *UserBoxRequest, opts ...grpc.CallOption) (*ActionResponse, error)
+	AddToBox(ctx context.Context, in *UserBoxRequest, opts ...grpc.CallOption) (*MovieActionResponse, error)
+	RemoveFromBox(ctx context.Context, in *UserBoxRequest, opts ...grpc.CallOption) (*MovieActionResponse, error)
 	GetBox(ctx context.Context, in *MovieBoxIdentifier, opts ...grpc.CallOption) (*MovieBox, error)
-	SetBox(ctx context.Context, in *MovieBox, opts ...grpc.CallOption) (*ActionResponse, error)
-	UserOfBox(ctx context.Context, in *MovieBoxIdentifier, opts ...grpc.CallOption) (*UserGroup, error)
+	SetBox(ctx context.Context, in *MovieBox, opts ...grpc.CallOption) (*MovieActionResponse, error)
+	UserOfBox(ctx context.Context, in *MovieBoxIdentifier, opts ...grpc.CallOption) (*UserOfBoxResponse, error)
 	GetMovie(ctx context.Context, in *MovieIdentifier, opts ...grpc.CallOption) (*Movie, error)
 }
 
@@ -58,8 +58,8 @@ func (c *movieServiceClient) CreateBox(ctx context.Context, in *CreateRequest, o
 	return out, nil
 }
 
-func (c *movieServiceClient) AddToBox(ctx context.Context, in *UserBoxRequest, opts ...grpc.CallOption) (*ActionResponse, error) {
-	out := new(ActionResponse)
+func (c *movieServiceClient) AddToBox(ctx context.Context, in *UserBoxRequest, opts ...grpc.CallOption) (*MovieActionResponse, error) {
+	out := new(MovieActionResponse)
 	err := c.cc.Invoke(ctx, MovieService_AddToBox_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -67,8 +67,8 @@ func (c *movieServiceClient) AddToBox(ctx context.Context, in *UserBoxRequest, o
 	return out, nil
 }
 
-func (c *movieServiceClient) RemoveFromBox(ctx context.Context, in *UserBoxRequest, opts ...grpc.CallOption) (*ActionResponse, error) {
-	out := new(ActionResponse)
+func (c *movieServiceClient) RemoveFromBox(ctx context.Context, in *UserBoxRequest, opts ...grpc.CallOption) (*MovieActionResponse, error) {
+	out := new(MovieActionResponse)
 	err := c.cc.Invoke(ctx, MovieService_RemoveFromBox_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -85,8 +85,8 @@ func (c *movieServiceClient) GetBox(ctx context.Context, in *MovieBoxIdentifier,
 	return out, nil
 }
 
-func (c *movieServiceClient) SetBox(ctx context.Context, in *MovieBox, opts ...grpc.CallOption) (*ActionResponse, error) {
-	out := new(ActionResponse)
+func (c *movieServiceClient) SetBox(ctx context.Context, in *MovieBox, opts ...grpc.CallOption) (*MovieActionResponse, error) {
+	out := new(MovieActionResponse)
 	err := c.cc.Invoke(ctx, MovieService_SetBox_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -94,8 +94,8 @@ func (c *movieServiceClient) SetBox(ctx context.Context, in *MovieBox, opts ...g
 	return out, nil
 }
 
-func (c *movieServiceClient) UserOfBox(ctx context.Context, in *MovieBoxIdentifier, opts ...grpc.CallOption) (*UserGroup, error) {
-	out := new(UserGroup)
+func (c *movieServiceClient) UserOfBox(ctx context.Context, in *MovieBoxIdentifier, opts ...grpc.CallOption) (*UserOfBoxResponse, error) {
+	out := new(UserOfBoxResponse)
 	err := c.cc.Invoke(ctx, MovieService_UserOfBox_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -117,11 +117,11 @@ func (c *movieServiceClient) GetMovie(ctx context.Context, in *MovieIdentifier, 
 // for forward compatibility
 type MovieServiceServer interface {
 	CreateBox(context.Context, *CreateRequest) (*MovieBoxIdentifier, error)
-	AddToBox(context.Context, *UserBoxRequest) (*ActionResponse, error)
-	RemoveFromBox(context.Context, *UserBoxRequest) (*ActionResponse, error)
+	AddToBox(context.Context, *UserBoxRequest) (*MovieActionResponse, error)
+	RemoveFromBox(context.Context, *UserBoxRequest) (*MovieActionResponse, error)
 	GetBox(context.Context, *MovieBoxIdentifier) (*MovieBox, error)
-	SetBox(context.Context, *MovieBox) (*ActionResponse, error)
-	UserOfBox(context.Context, *MovieBoxIdentifier) (*UserGroup, error)
+	SetBox(context.Context, *MovieBox) (*MovieActionResponse, error)
+	UserOfBox(context.Context, *MovieBoxIdentifier) (*UserOfBoxResponse, error)
 	GetMovie(context.Context, *MovieIdentifier) (*Movie, error)
 	mustEmbedUnimplementedMovieServiceServer()
 }
@@ -133,19 +133,19 @@ type UnimplementedMovieServiceServer struct {
 func (UnimplementedMovieServiceServer) CreateBox(context.Context, *CreateRequest) (*MovieBoxIdentifier, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateBox not implemented")
 }
-func (UnimplementedMovieServiceServer) AddToBox(context.Context, *UserBoxRequest) (*ActionResponse, error) {
+func (UnimplementedMovieServiceServer) AddToBox(context.Context, *UserBoxRequest) (*MovieActionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddToBox not implemented")
 }
-func (UnimplementedMovieServiceServer) RemoveFromBox(context.Context, *UserBoxRequest) (*ActionResponse, error) {
+func (UnimplementedMovieServiceServer) RemoveFromBox(context.Context, *UserBoxRequest) (*MovieActionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveFromBox not implemented")
 }
 func (UnimplementedMovieServiceServer) GetBox(context.Context, *MovieBoxIdentifier) (*MovieBox, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBox not implemented")
 }
-func (UnimplementedMovieServiceServer) SetBox(context.Context, *MovieBox) (*ActionResponse, error) {
+func (UnimplementedMovieServiceServer) SetBox(context.Context, *MovieBox) (*MovieActionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetBox not implemented")
 }
-func (UnimplementedMovieServiceServer) UserOfBox(context.Context, *MovieBoxIdentifier) (*UserGroup, error) {
+func (UnimplementedMovieServiceServer) UserOfBox(context.Context, *MovieBoxIdentifier) (*UserOfBoxResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserOfBox not implemented")
 }
 func (UnimplementedMovieServiceServer) GetMovie(context.Context, *MovieIdentifier) (*Movie, error) {
