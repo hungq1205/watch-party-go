@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -28,7 +29,7 @@ type RenderService struct {
 func (s *RenderService) Start() (*grpc.Server, error) {
 	e := echo.New()
 
-	e.Use(middleware.Static("github.com/hungq1205/watch-party/static/"))
+	e.Use(middleware.Static("static"))
 
 	e.GET("/login", LogInPage)
 	e.POST("/login", LogIn)
@@ -40,22 +41,25 @@ func (s *RenderService) Start() (*grpc.Server, error) {
 }
 
 func LogInPage(c echo.Context) error {
-	return c.File("github.com/hungq1205/watch-party/static/views/login.html")
+	return c.File("static/views/login.html")
 }
 
 func MainPage(c echo.Context) error {
-	return c.File("github.com/hungq1205/watch-party/static/views/index.html")
+	return c.File("static/views/index.html")
 }
 
 func LogIn(c echo.Context) error {
+	fmt.Println("here 2")
 	lock.Lock()
 	defer lock.Unlock()
 
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 
+	fmt.Println("here 1")
 	conn := NewGRPCClientConn(userServiceAddr)
 	userService := users.NewUserServiceClient(conn)
+	defer conn.Close()
 
 	res, err := userService.LogIn(c.Request().Context(), &users.LogInRequest{
 		Username: username,
@@ -85,6 +89,7 @@ func SignUp(c echo.Context) error {
 
 	conn := NewGRPCClientConn(userServiceAddr)
 	userService := users.NewUserServiceClient(conn)
+	defer conn.Close()
 
 	_, err := userService.SignUp(c.Request().Context(), &users.SignUpRequest{
 		Username:    username,

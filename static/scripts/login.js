@@ -21,7 +21,7 @@ form.addEventListener("submit", e => {
 
     if (isSignup) {
         data.set("display_name", data.get("display_name").trim());
-        fetch('http://localhost:3001/signup', {
+        fetch('http://localhost:3000/signup', {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -40,7 +40,7 @@ form.addEventListener("submit", e => {
     }
     else {
         data.delete("display_name");
-        fetch('http://localhost:3001/login', {
+        fetch('http://localhost:3000/login', {
             method: 'POST',
             credentials: 'include',
             headers: {

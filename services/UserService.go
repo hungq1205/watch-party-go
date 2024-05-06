@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"sync"
@@ -104,6 +105,7 @@ func (s *UserService) SignUp(ctx context.Context, req *users.SignUpRequest) (*us
 }
 
 func (s *UserService) LogIn(ctx context.Context, req *users.LogInRequest) (*users.LogInResponse, error) {
+	fmt.Println("here 2")
 	usr_lock.Lock()
 	defer usr_lock.Unlock()
 
@@ -117,6 +119,7 @@ func (s *UserService) LogIn(ctx context.Context, req *users.LogInRequest) (*user
 	h.Write([]byte(req.Password))
 	pwHash := h.Sum(nil)
 
+	fmt.Println("here 3")
 	row, err := db.Query("SELECT id FROM Users WHERE username=? AND pw_hash=?", req.Username, pwHash)
 	if err != nil {
 		return nil, err
@@ -126,6 +129,7 @@ func (s *UserService) LogIn(ctx context.Context, req *users.LogInRequest) (*user
 	if !row.Next() {
 		return nil, errors.New("Unable to find user")
 	}
+	fmt.Println("here 4")
 
 	var id int64
 	err = row.Scan(&id)
