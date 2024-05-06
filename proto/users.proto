@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+option go_package = "github.com/hungq1205/watch-party/users";
+
+service UserService {
+    rpc SignUp(SignUpRequest) returns (SignUpResponse) {}
+    rpc LogIn(LogInRequest) returns (LogInResponse) {}
+    rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse) {}
+    rpc GetUsername(GetUsernameRequest) returns (GetUsernameResponse) {}
+    rpc ExistsUsers(ExistsUsersRequest) returns (ExistsUsersResponse) {}
+}
+
+message ExistsUsersRequest {
+    repeated int64 UserIds = 1;
+}
+
+message ExistsUsersResponse {
+    repeated bool Exists = 1;
+}
+
+message SignUpRequest {
+    string Username = 1;
+    string Password = 2;
+    string DisplayName = 3;
+}
+
+message SignUpResponse {
+    int64 UserID = 1;
+}
+
+message LogInRequest {
+    string Username = 1;
+    string Password = 2;
+}
+
+message LogInResponse {
+    int64 UserID = 1;
+    string JwtToken = 2;
+}
+
+message AuthenticateRequest {
+    string JwtToken = 1;
+}
+
+message AuthenticateResponse {
+    int64 UserID = 1;
+    string Username = 2;
+}
+
+message GetUsernameRequest {
+    int64 UserID = 1;
+}
+
+message GetUsernameResponse {
+    bool Success = 1;
+    string Username = 2;
+}

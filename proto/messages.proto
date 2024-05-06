@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+option go_package = "github.com/hungq1205/watch-party/messages";
+
+service MessageService {
+    rpc Sent(SentRequest) returns (MessageIdentifier) {}
+    rpc Delete(MessageIdentifier) returns (ActionResponse) {}
+    rpc GetMessage(MessageIdentifier) returns (Message) {}
+    rpc QueryMessages(QueryMessageRequest) returns (QueryMessageResponse) {}
+    rpc DeleteMessages(QueryMessageRequest) returns (ActionResponse) {}
+
+    rpc CreateMessageBox(UserGroup) returns (MessageBoxIdentifier) {}
+    rpc DeleteMessageBox(MessageBoxIdentifier) returns (ActionResponse) {}
+    rpc GetMessageBox(MessageBoxIdentifier) returns (UserGroup) {}
+    rpc GetMessageBoxOfUser(UserIdentifier) returns (BoxGroup) {}
+}
+
+message BoxGroup {
+    repeated int64 BoxIds = 1;
+}
+
+message UserGroup {
+    repeated int64 UserIds = 1;
+}
+
+message UserIdentifier {
+    int64 UserId = 1;
+}
+
+message MessageBoxIdentifier {
+    int64 BoxId = 1;
+}
+
+message Message {
+    int64 MessageId = 1;
+    int64 UserId = 2;
+    int64 BoxId = 3;
+    string Content = 4;
+}
+
+message SentRequest {
+    int64 UserId = 1;
+    int64 BoxId = 2;
+    string Content = 3;
+}
+
+message MessageIdentifier {
+    int64 MessageId = 1;
+}
+
+message ActionResponse {
+    bool success = 1;
+}
+
+message QueryMessageRequest {
+    int64 UserId = 1;
+    int64 BoxId = 2;
+}
+
+message QueryMessageResponse {
+    repeated Message messages = 1;
+}
