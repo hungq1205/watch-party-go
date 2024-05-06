@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option go_package = "github.com/hungq1205/common/users";
+
+service UserService {
+    rpc SignUp(SignUpRequest) returns (SignUpResponse) {}
+    rpc LogIn(LogInRequest) returns (LogInResponse) {}
+    rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse) {}
+    rpc GetUsername(GetUsernameRequest) returns (GetUsernameResponse) {}
+}
+
+message SignUpRequest {
+    string username = 1;
+    string password = 2;
+    string displayName = 3;
+}
+
+message SignUpResponse {
+    int64 userID = 1;
+}
+
+message LogInRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message LogInResponse {
+    int64 userID = 1;
+    string jwtToken = 2;
+}
+
+message AuthenticateRequest {
+    string jwtToken = 1;
+}
+
+message AuthenticateResponse {
+    int64 userID = 1;
+    string username = 2;
+}
+
+message GetUsernameRequest {
+    int64 userID = 1;
+}
+
+message GetUsernameResponse {
+    bool success = 1;
+    string username = 2;
+}
