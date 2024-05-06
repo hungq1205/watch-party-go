@@ -5,33 +5,29 @@ import (
 	"log"
 
 	"github.com/hungq1205/watch-party/services"
+	"google.golang.org/grpc"
 )
 
 func main() {
-	// userService, err := (&services.UserService{}).Start()
-	// if err != nil {
-	// 	log.Fatal("Failed to start user service")
-	// }
-	// defer userService.Stop()
-	// fmt.Print("Started user service")
+	c := make(chan *grpc.Server)
 
-	// msgService, err := (&services.MessageService{}).Start()
-	// if err != nil {
-	// 	log.Fatal("Failed to start message service")
-	// }
-	// defer msgService.Stop()
-	// fmt.Print("Started message service")
+	go (&services.UserService{}).Start(c)
+	fmt.Println("Started user service...")
+	userService := <-c
+	defer userService.Stop()
 
-	// movieService, err := (&services.MovieService{}).Start()
-	// if err != nil {
-	// 	log.Fatal("Failed to start movie service")
-	// }
-	// defer movieService.Stop()
-	// fmt.Print("Started movie service")
+	go (&services.MessageService{}).Start(c)
+	fmt.Println("Started message service...")
+	msgService := <-c
+	defer msgService.Stop()
+
+	go (&services.MovieService{}).Start(c)
+	fmt.Println("Started movie service...")
+	movieService := <-c
+	defer movieService.Stop()
 
 	_, err := (&services.RenderService{}).Start()
 	if err != nil {
 		log.Fatal("Failed to start render service")
 	}
-	fmt.Print("Started render service")
 }

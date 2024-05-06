@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 	"net"
 	"sync"
 
@@ -21,18 +22,20 @@ type MovieService struct {
 	movies.UnimplementedMovieServiceServer
 }
 
-func (s *MovieService) Start() (*grpc.Server, error) {
+func (s *MovieService) Start(c chan *grpc.Server) {
 	lis, err := net.Listen("tcp", movieServiceAddr)
 	if err != nil {
-		return nil, err
+		log.Fatal("Failed to start movie service")
 	}
 	sv := grpc.NewServer()
+	c <- sv
 
 	movieService := &MovieService{}
 	movies.RegisterMovieServiceServer(sv, movieService)
 	err = sv.Serve(lis)
-
-	return sv, err
+	if err != nil {
+		log.Fatal("Failed to start movie service")
+	}
 }
 
 func (s *MovieService) CreateBox(ctx context.Context, req *movies.CreateRequest) (*movies.MovieBoxIdentifier, error) {

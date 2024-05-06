@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"errors"
+	"log"
 	"net"
 	"sync"
 	"time"
@@ -25,18 +26,20 @@ type UserService struct {
 	users.UnimplementedUserServiceServer
 }
 
-func (s *UserService) Start() (*grpc.Server, error) {
+func (s *UserService) Start(c chan *grpc.Server) {
 	lis, err := net.Listen("tcp", userServiceAddr)
 	if err != nil {
-		return nil, err
+		log.Fatal("Failed to start user service")
 	}
 	sv := grpc.NewServer()
+	c <- sv
 
 	userService := &UserService{}
 	users.RegisterUserServiceServer(sv, userService)
 	err = sv.Serve(lis)
-
-	return sv, err
+	if err != nil {
+		log.Fatal("Failed to start user service")
+	}
 }
 
 func (s *UserService) ExistsUsers(ctx context.Context, req *users.ExistsUsersRequest) (*users.ExistsUsersResponse, error) {

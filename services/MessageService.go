@@ -23,18 +23,20 @@ type MessageService struct {
 	mes.UnimplementedMessageServiceServer
 }
 
-func (s *MessageService) Start() (*grpc.Server, error) {
+func (s *MessageService) Start(c chan *grpc.Server) {
 	lis, err := net.Listen("tcp", messageServiceAddr)
 	if err != nil {
-		return nil, err
+		log.Fatal("Failed to start message service")
 	}
 	sv := grpc.NewServer()
+	c <- sv
 
 	msgService := &MessageService{}
 	messages.RegisterMessageServiceServer(sv, msgService)
 	err = sv.Serve(lis)
-
-	return sv, err
+	if err != nil {
+		log.Fatal("Failed to start message service")
+	}
 }
 
 func (s *MessageService) RemoveUserFromBox(ctx context.Context, req *mes.UserBox) (*mes.ActionResponse, error) {
