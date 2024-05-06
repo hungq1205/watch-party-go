@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
-	mes "github.com/hungq1205/watch-party/messages"
-	"github.com/hungq1205/watch-party/users"
+	mes "github.com/hungq1205/watch-party/protogen/messages"
+	"github.com/hungq1205/watch-party/protogen/users"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -82,7 +82,7 @@ func (s *MessageService) CreateMessageBox(ctx context.Context, req *mes.UserGrou
 		return nil, err
 	}
 
-	conn, err := grpc.NewClient(":3001", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(userServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not create client: %v", err)
 	}

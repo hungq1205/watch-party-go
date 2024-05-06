@@ -4,8 +4,8 @@ import (
 	"log"
 	"net"
 
+	"github.com/hungq1205/watch-party/protogen/users"
 	"github.com/hungq1205/watch-party/services"
-	"github.com/hungq1205/watch-party/users"
 	"google.golang.org/grpc"
 )
 

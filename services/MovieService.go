@@ -6,13 +6,13 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/hungq1205/watch-party/movies"
-	"github.com/hungq1205/watch-party/users"
+	"github.com/hungq1205/watch-party/protogen/movies"
+	"github.com/hungq1205/watch-party/protogen/users"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const mv_connectionStr = "root:hungthoi@tcp(127.0.0.1:3306)/movie_service"
+const mv_connectionStr = "root:hungthoi@tcp(127.0.0.1:3308)/movie_service"
 
 var mv_lock = sync.Mutex{}
 
@@ -29,7 +29,7 @@ func (s *MovieService) CreateBox(ctx context.Context, req *movies.CreateRequest)
 	}
 	defer db.Close()
 
-	conn, err := grpc.NewClient(":3001", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(userServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}

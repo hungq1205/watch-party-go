@@ -9,7 +9,8 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/hungq1205/watch-party/users"
+	"github.com/hungq1205/watch-party/protogen/users"
+	"google.golang.org/genproto/googleapis/rpc/code"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -103,6 +104,10 @@ func (s *UserService) LogIn(ctx context.Context, req *users.LogInRequest) (*user
 	}
 	defer row.Close()
 
+	if !row.Next() {
+		return nil, status.Errorf(code.Code_NOT_FOUND, "Unable to find user")
+	}
+
 	var id int64
 	err = row.Scan(&id)
 
@@ -160,7 +165,7 @@ func (s *UserService) Authenticate(ctx context.Context, req *users.AuthenticateR
 			return nil, err
 		}
 	} else {
-		return nil, status.Errorf(codes.AlreadyExists, "user doenst exists")
+		return nil, status.Errorf(code.Code_NOT_FOUND, "Unable to find user")
 	}
 
 	return &users.AuthenticateResponse{
@@ -186,7 +191,7 @@ func (s *UserService) GetUsername(ctx context.Context, req *users.GetUsernameReq
 	defer row.Close()
 
 	if !row.Next() {
-		return nil, status.Errorf(codes.AlreadyExists, "user doenst exists")
+		return nil, status.Errorf(code.Code_NOT_FOUND, "Unable to find user")
 	}
 
 	var username string
