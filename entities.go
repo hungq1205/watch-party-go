@@ -14,11 +14,26 @@ type message struct {
 	BoxId    int64  `json:"box_id"`
 }
 
-type chatbox struct {
+type msgBox struct {
 	Id int64 `json:"id"`
 }
 
 type user_chatbox struct {
 	UserId int64 `json:"user_id"`
 	BoxId  int64 `json:"box_id"`
+}
+
+type movie struct {
+	MovieId   int64  `json:"movie_id"`
+	Title     string `json:"title"`
+	Url       string `json:"url"`
+	PosterUrl string `json:"poster_url"`
+}
+
+type movieBox struct {
+	BoxId    int64   `json:"box_id"`
+	OwnerId  string  `json:"owner_id"`
+	Elapsed  float64 `json:"elapsed"`
+	MovieUrl string  `json:"movie_url"`
+	Password string  `json:"password"`
 }

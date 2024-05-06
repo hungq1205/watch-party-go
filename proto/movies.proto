@@ -4,10 +4,10 @@ option go_package = "github.com/hungq1205/watch-party/movies";
 
 service MovieService {
     rpc CreateBox(CreateRequest) returns (MovieBoxIdentifier) {}
-    rpc AddToBox(UserBoxRequest) returns (MovieBoxIdentifier) {}
+    rpc AddToBox(UserBoxRequest) returns (ActionResponse) {}
     rpc RemoveFromBox(UserBoxRequest) returns (ActionResponse) {}
     rpc GetBox(MovieBoxIdentifier) returns (MovieBox) {}
-    rpc SetBox(UserGroup) returns (ActionResponse) {}
+    rpc SetBox(MovieBox) returns (ActionResponse) {}
     rpc UserOfBox(MovieBoxIdentifier) returns (UserGroup) {}
 
     rpc GetMovie(MovieIdentifier) returns (Movie) {}

@@ -21,7 +21,7 @@ const msg_connectionStr = "root:hungthoi@tcp(127.0.0.1:3307)/message_service"
 
 var msg_lock = sync.Mutex{}
 
-func (s *MessageService) RemoveUserFromBox(context.Context, *MessageBoxIdentifier) (*ActionResponse, error) {
+func (s *MessageService) RemoveUserFromBox(ctx context.Context, req *mes.MessageBoxIdentifier) (*mes.ActionResponse, error) {
 	msg_lock.Lock()
 	defer msg_lock.Unlock()
 
@@ -41,10 +41,10 @@ func (s *MessageService) RemoveUserFromBox(context.Context, *MessageBoxIdentifie
 		return nil, err
 	}
 
-	return &ActionResponse{Success: aff > 0}, nil
+	return &mes.ActionResponse{Success: aff > 0}, nil
 }
 
-func (s *MessageService) AddUserToBox(context.Context, *AddUserToBoxRequest) (*ActionResponse, error) {
+func (s *MessageService) AddUserToBox(ctx context.Context, req *mes.AddUserToBoxRequest) (*mes.ActionResponse, error) {
 	msg_lock.Lock()
 	defer msg_lock.Unlock()
 
@@ -54,12 +54,12 @@ func (s *MessageService) AddUserToBox(context.Context, *AddUserToBoxRequest) (*A
 	}
 	defer db.Close()
 
-	row, err := db.Exec("INSERT INTO MsgBox_user (box_id, user_id) VALUES (?, ?)", req.BoxId, req.UserId)
+	_, err = db.Exec("INSERT INTO MsgBox_user (box_id, user_id) VALUES (?, ?)", req.BoxId, req.UserId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ActionResponse{Success: aff > 0}, nil
+	return &mes.ActionResponse{Success: true}, nil
 }
 
 func (s *MessageService) CreateMessageBox(ctx context.Context, req *mes.UserGroup) (*mes.MessageBoxIdentifier, error) {
