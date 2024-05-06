@@ -1,0 +1,55 @@
+syntax="proto3";
+
+option go_package = "github.com/hungq1205/watch-party/movies";
+
+service MovieService {
+    rpc CreateBox(CreateRequest) returns (MovieBoxIdentifier) {}
+    rpc AddToBox(UserBoxRequest) returns (MovieBoxIdentifier) {}
+    rpc RemoveFromBox(UserBoxRequest) returns (ActionResponse) {}
+    rpc GetBox(MovieBoxIdentifier) returns (MovieBox) {}
+    rpc SetBox(UserGroup) returns (ActionResponse) {}
+    rpc UserOfBox(MovieBoxIdentifier) returns (UserGroup) {}
+
+    rpc GetMovie(MovieIdentifier) returns (Movie) {}
+}
+
+message ActionResponse {
+    bool Success = 1;
+}
+
+message MovieBoxIdentifier {
+    int64 BoxId = 1;
+}
+
+message MovieIdentifier {
+    int64 MovieId = 1;
+}
+
+message Movie {
+    int64 MovieId = 1;
+    string Title = 2;
+    string Url = 3;
+    string PosterUrl = 4;
+}
+
+message MovieBox {
+    int64 BoxId = 1;
+    int64 OwnerId = 2;
+    float Elapsed = 3;
+    string MovieUrl = 4;
+    string Password = 5;
+}
+
+message UserGroup {
+    repeated int64 UserIds = 1;
+}
+
+message CreateRequest {
+    int64 OwnerId = 1;
+    string Password = 2;
+}
+
+message UserBoxRequest {
+    int64 BoxId = 1;
+    int64 UserId = 2;
+}

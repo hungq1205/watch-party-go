@@ -13,6 +13,8 @@ service MessageService {
     rpc DeleteMessageBox(MessageBoxIdentifier) returns (ActionResponse) {}
     rpc GetMessageBox(MessageBoxIdentifier) returns (UserGroup) {}
     rpc GetMessageBoxOfUser(UserIdentifier) returns (BoxGroup) {}
+    rpc RemoveUserFromBox(MessageBoxIdentifier) returns (ActionResponse) {}
+    rpc AddUserToBox(AddUserToBoxRequest) returns (ActionResponse) {}
 }
 
 message BoxGroup {
@@ -29,6 +31,11 @@ message UserIdentifier {
 
 message MessageBoxIdentifier {
     int64 BoxId = 1;
+}
+
+message AddUserToBoxRequest {
+    int64 BoxId = 1;
+    int64 UserId = 2;
 }
 
 message Message {

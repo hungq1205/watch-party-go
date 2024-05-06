@@ -21,6 +21,47 @@ const msg_connectionStr = "root:hungthoi@tcp(127.0.0.1:3307)/message_service"
 
 var msg_lock = sync.Mutex{}
 
+func (s *MessageService) RemoveUserFromBox(context.Context, *MessageBoxIdentifier) (*ActionResponse, error) {
+	msg_lock.Lock()
+	defer msg_lock.Unlock()
+
+	db, err := sql.Open("mysql", msg_connectionStr)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	row, err := db.Exec("DELETE FROM MsgBox_user WHERE user_id=?", req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	aff, err := row.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ActionResponse{Success: aff > 0}, nil
+}
+
+func (s *MessageService) AddUserToBox(context.Context, *AddUserToBoxRequest) (*ActionResponse, error) {
+	msg_lock.Lock()
+	defer msg_lock.Unlock()
+
+	db, err := sql.Open("mysql", msg_connectionStr)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	row, err := db.Exec("INSERT INTO MsgBox_user (box_id, user_id) VALUES (?, ?)", req.BoxId, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ActionResponse{Success: aff > 0}, nil
+}
+
 func (s *MessageService) CreateMessageBox(ctx context.Context, req *mes.UserGroup) (*mes.MessageBoxIdentifier, error) {
 	msg_lock.Lock()
 	defer msg_lock.Unlock()
