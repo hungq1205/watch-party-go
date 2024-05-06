@@ -22,7 +22,10 @@ const (
 
 var lock = sync.Mutex{}
 
-func init() {
+type RenderService struct {
+}
+
+func (s *RenderService) Start() (*grpc.Server, error) {
 	e := echo.New()
 
 	e.Use(middleware.Static("github.com/hungq1205/watch-party/static/"))
@@ -30,14 +33,18 @@ func init() {
 	e.GET("/login", LogInPage)
 	e.POST("/login", LogIn)
 	e.POST("/signup", SignUp)
+
+	err := e.Start(renderServiceAddr)
+
+	return nil, err
 }
 
 func LogInPage(c echo.Context) error {
-	return c.File("static/views/login.html")
+	return c.File("github.com/hungq1205/watch-party/static/views/login.html")
 }
 
 func MainPage(c echo.Context) error {
-	return c.File("static/views/index.html")
+	return c.File("github.com/hungq1205/watch-party/static/views/index.html")
 }
 
 func LogIn(c echo.Context) error {

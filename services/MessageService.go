@@ -4,22 +4,38 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"net"
 	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/hungq1205/watch-party/protogen/messages"
 	mes "github.com/hungq1205/watch-party/protogen/messages"
 	"github.com/hungq1205/watch-party/protogen/users"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+const msg_connectionStr = "root:hungthoi@tcp(127.0.0.1:3306)/message_service"
+
+var msg_lock = sync.Mutex{}
+
 type MessageService struct {
 	mes.UnimplementedMessageServiceServer
 }
 
-const msg_connectionStr = "root:hungthoi@tcp(127.0.0.1:3307)/message_service"
+func (s *MessageService) Start() (*grpc.Server, error) {
+	lis, err := net.Listen("tcp", messageServiceAddr)
+	if err != nil {
+		return nil, err
+	}
+	sv := grpc.NewServer()
 
-var msg_lock = sync.Mutex{}
+	msgService := &MmessageService{}
+	messages.RegisterMessageServiceServer(sv, msgService)
+	err = sv.Serve(lis)
+
+	return sv, err
+}
 
 func (s *MessageService) RemoveUserFromBox(ctx context.Context, req *mes.MessageBoxIdentifier) (*mes.ActionResponse, error) {
 	msg_lock.Lock()

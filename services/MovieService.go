@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"net"
 	"sync"
 
 	"github.com/hungq1205/watch-party/protogen/movies"
@@ -12,11 +13,26 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const mv_connectionStr = "root:hungthoi@tcp(127.0.0.1:3308)/movie_service"
+const mv_connectionStr = "root:hungthoi@tcp(127.0.0.1:3306)/movie_service"
 
 var mv_lock = sync.Mutex{}
 
 type MovieService struct {
+	movies.UnimplementedMovieServiceServer
+}
+
+func (s *MovieService) Start() (*grpc.Server, error) {
+	lis, err := net.Listen("tcp", movieServiceAddr)
+	if err != nil {
+		return nil, err
+	}
+	sv := grpc.NewServer()
+
+	movieService := &MovieService{}
+	movies.RegisterMovieServiceServer(sv, movieService)
+	err = sv.Serve(lis)
+
+	return sv, err
 }
 
 func (s *MovieService) CreateBox(ctx context.Context, req *movies.CreateRequest) (*movies.MovieBoxIdentifier, error) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"database/sql"
+	"net"
 	"sync"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/hungq1205/watch-party/protogen/users"
 	"google.golang.org/genproto/googleapis/rpc/code"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -21,6 +23,20 @@ var usr_lock = sync.Mutex{}
 
 type UserService struct {
 	users.UnimplementedUserServiceServer
+}
+
+func (s *UserService) Start() (*grpc.Server, error) {
+	lis, err := net.Listen("tcp", userServiceAddr)
+	if err != nil {
+		return nil, err
+	}
+	sv := grpc.NewServer()
+
+	userService := &UserService{}
+	users.RegisterMovieServiceServer(sv, userService)
+	err = sv.Serve(lis)
+
+	return sv, err
 }
 
 func (s *UserService) ExistsUsers(ctx context.Context, req *users.ExistsUsersRequest) (*users.ExistsUsersResponse, error) {
