@@ -4,13 +4,20 @@ option go_package = "github.com/hungq1205/watch-party/protogen/movies";
 
 service MovieService {
     rpc CreateBox(CreateRequest) returns (MovieBoxIdentifier) {}
+    rpc DeleteBox(MovieBoxIdentifier) returns (MovieActionResponse) {}
     rpc AddToBox(UserBoxRequest) returns (MovieActionResponse) {}
     rpc RemoveFromBox(UserBoxRequest) returns (MovieActionResponse) {}
     rpc GetBox(MovieBoxIdentifier) returns (MovieBox) {}
     rpc SetBox(MovieBox) returns (MovieActionResponse) {}
     rpc UserOfBox(MovieBoxIdentifier) returns (UserOfBoxResponse) {}
+    rpc BoxOfUser(BoxOfUserRequest) returns (MovieBoxIdentifier) {}
+    rpc ValidateOwner(UserBoxRequest) returns (MovieActionResponse) {}
 
     rpc GetMovie(MovieIdentifier) returns (Movie) {}
+}
+
+message BoxOfUserRequest {
+    int64 UserId = 1;
 }
 
 message MovieActionResponse {
@@ -35,9 +42,10 @@ message Movie {
 message MovieBox {
     int64 BoxId = 1;
     int64 OwnerId = 2;
-    float Elapsed = 3;
-    string MovieUrl = 4;
-    string Password = 5;
+    int64 MsgBoxId = 3;
+    float Elapsed = 4;
+    string MovieUrl = 5;
+    string Password = 6;
 }
 
 message UserOfBoxResponse {
@@ -46,7 +54,8 @@ message UserOfBoxResponse {
 
 message CreateRequest {
     int64 OwnerId = 1;
-    string Password = 2;
+    int64 MsgBoxId = 2;
+    string Password = 3;
 }
 
 message UserBoxRequest {

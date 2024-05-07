@@ -22,20 +22,40 @@ type MovieService struct {
 	movies.UnimplementedMovieServiceServer
 }
 
-func (s *MovieService) Start(c chan *grpc.Server) {
+func (s *MovieService) Start() *grpc.Server {
 	lis, err := net.Listen("tcp", movieServiceAddr)
 	if err != nil {
 		log.Fatal("Failed to start movie service")
 	}
 	sv := grpc.NewServer()
-	c <- sv
 
 	movieService := &MovieService{}
 	movies.RegisterMovieServiceServer(sv, movieService)
-	err = sv.Serve(lis)
+	go sv.Serve(lis)
+	return sv
+}
+
+func (s *MovieService) ValidateOwner(ctx context.Context, req *movies.UserBoxRequest) (*movies.MovieActionResponse, error) {
+	mv_lock.Lock()
+	defer mv_lock.Unlock()
+
+	db, err := sql.Open("mysql", mv_connectionStr)
 	if err != nil {
-		log.Fatal("Failed to start movie service")
+		return nil, err
 	}
+	defer db.Close()
+
+	row, err := db.Query("SELECT * FROM MovieBoxes WHERE box_id=? AND owner_id=?", req.BoxId, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+
+	if !row.Next() {
+		return &movies.MovieActionResponse{Success: false}, nil
+	}
+
+	return &movies.MovieActionResponse{Success: true}, nil
 }
 
 func (s *MovieService) CreateBox(ctx context.Context, req *movies.CreateRequest) (*movies.MovieBoxIdentifier, error) {
@@ -61,7 +81,7 @@ func (s *MovieService) CreateBox(ctx context.Context, req *movies.CreateRequest)
 	}
 
 	if !exists.Exists[0] {
-		return nil, errors.New("Movie box owner doesn't exists")
+		return nil, errors.New("movie box owner doesn't exists")
 	}
 
 	idRef, err := db.Exec("INSERT INTO MovieBoxes (owner_id, password) VALUES (?, ?)", req.OwnerId, req.Password)
@@ -75,6 +95,34 @@ func (s *MovieService) CreateBox(ctx context.Context, req *movies.CreateRequest)
 	}
 
 	return &movies.MovieBoxIdentifier{BoxId: box_id}, nil
+}
+
+func (s *MovieService) DeleteBox(ctx context.Context, req *movies.MovieBoxIdentifier) (*movies.MovieActionResponse, error) {
+	mv_lock.Lock()
+	defer mv_lock.Unlock()
+
+	db, err := sql.Open("mysql", mv_connectionStr)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	row, err := db.Exec("DELETE FROM MovieBoxes WHERE box_id=?", req.BoxId)
+	if err != nil {
+		return nil, err
+	}
+
+	aff, err := row.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = db.Exec("DELETE FROM MvBox_User WHERE box_id=?", req.BoxId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &movies.MovieActionResponse{Success: aff > 0}, nil
 }
 
 func (s *MovieService) AddToBox(ctx context.Context, req *movies.UserBoxRequest) (*movies.MovieActionResponse, error) {
@@ -192,6 +240,35 @@ func (s *MovieService) UserOfBox(ctx context.Context, req *movies.MovieBoxIdenti
 	}
 
 	return &movies.UserOfBoxResponse{UserIds: userIds}, nil
+}
+
+func (s *MovieService) BoxOfUser(ctx context.Context, req *movies.BoxOfUserRequest) (*movies.MovieBoxIdentifier, error) {
+	mv_lock.Lock()
+	defer mv_lock.Unlock()
+
+	db, err := sql.Open("mysql", mv_connectionStr)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	row, err := db.Query("SELECT box_id FROM MvBox_User WHERE user_id=?", req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+
+	var boxId int64
+	if !row.Next() {
+		return nil, nil
+	}
+
+	err = row.Scan(&boxId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &movies.MovieBoxIdentifier{BoxId: boxId}, nil
 }
 
 func (s *MovieService) GetMovie(ctx context.Context, req *movies.MovieIdentifier) (*movies.Movie, error) {

@@ -29,8 +29,11 @@ form.addEventListener("submit", e => {
             },
             body: data
         }).then(function(res) {
-            if (res.status == 201) 
-                alert("Signed up");
+            if (res.status == 201 || res.status == 200) 
+                {
+                    alert("Signed up");
+                    window.location.replace("http://localhost:3000/login");
+                }
             else
                 res.text()
                     .then(text => alert(text))
@@ -47,9 +50,18 @@ form.addEventListener("submit", e => {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: data
-        }).then(res => res.text())
-            .then(text => alert(text))
-            .catch(err => alert(err));
+        }).then(function(res) {
+            if (res.status == 200) {
+                alert("Logged in");
+                window.location.replace("http://localhost:3000/");
+            }
+            else {
+                res.text()
+                .then(text => alert(text))
+                .catch(err => alert(err));
+            }
+        })
+        .catch(err => alert(err));
     }
 });
 

@@ -4,8 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"database/sql"
-	"errors"
-	"fmt"
+	"encoding/base64"
 	"log"
 	"net"
 	"sync"
@@ -27,20 +26,17 @@ type UserService struct {
 	users.UnimplementedUserServiceServer
 }
 
-func (s *UserService) Start(c chan *grpc.Server) {
+func (s *UserService) Start() *grpc.Server {
 	lis, err := net.Listen("tcp", userServiceAddr)
 	if err != nil {
 		log.Fatal("Failed to start user service")
 	}
 	sv := grpc.NewServer()
-	c <- sv
 
 	userService := &UserService{}
 	users.RegisterUserServiceServer(sv, userService)
-	err = sv.Serve(lis)
-	if err != nil {
-		log.Fatal("Failed to start user service")
-	}
+	go sv.Serve(lis)
+	return sv
 }
 
 func (s *UserService) ExistsUsers(ctx context.Context, req *users.ExistsUsersRequest) (*users.ExistsUsersResponse, error) {
@@ -89,7 +85,7 @@ func (s *UserService) SignUp(ctx context.Context, req *users.SignUpRequest) (*us
 
 	h := sha256.New()
 	h.Write([]byte(req.Password))
-	pwHash := h.Sum(nil)
+	pwHash := base64.URLEncoding.EncodeToString(h.Sum(nil))
 
 	idRef, err := db.Exec("INSERT INTO Users (username, pw_hash, display_name) VALUES (?, ?, ?)", req.Username, pwHash, req.DisplayName)
 	if err != nil {
@@ -105,7 +101,6 @@ func (s *UserService) SignUp(ctx context.Context, req *users.SignUpRequest) (*us
 }
 
 func (s *UserService) LogIn(ctx context.Context, req *users.LogInRequest) (*users.LogInResponse, error) {
-	fmt.Println("here 2")
 	usr_lock.Lock()
 	defer usr_lock.Unlock()
 
@@ -117,9 +112,8 @@ func (s *UserService) LogIn(ctx context.Context, req *users.LogInRequest) (*user
 
 	h := sha256.New()
 	h.Write([]byte(req.Password))
-	pwHash := h.Sum(nil)
+	pwHash := base64.URLEncoding.EncodeToString(h.Sum(nil))
 
-	fmt.Println("here 3")
 	row, err := db.Query("SELECT id FROM Users WHERE username=? AND pw_hash=?", req.Username, pwHash)
 	if err != nil {
 		return nil, err
@@ -127,9 +121,8 @@ func (s *UserService) LogIn(ctx context.Context, req *users.LogInRequest) (*user
 	defer row.Close()
 
 	if !row.Next() {
-		return nil, errors.New("Unable to find user")
+		return nil, status.Errorf(codes.NotFound, "Unable to find user")
 	}
-	fmt.Println("here 4")
 
 	var id int64
 	err = row.Scan(&id)
@@ -188,7 +181,7 @@ func (s *UserService) Authenticate(ctx context.Context, req *users.AuthenticateR
 			return nil, err
 		}
 	} else {
-		return nil, errors.New("Unable to find user")
+		return nil, status.Errorf(codes.NotFound, "Unable to find user")
 	}
 
 	return &users.AuthenticateResponse{
@@ -214,7 +207,7 @@ func (s *UserService) GetUsername(ctx context.Context, req *users.GetUsernameReq
 	defer row.Close()
 
 	if !row.Next() {
-		return nil, errors.New("Unable to find user")
+		return nil, status.Errorf(codes.NotFound, "Unable to find user")
 	}
 
 	var username string

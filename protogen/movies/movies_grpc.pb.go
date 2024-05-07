@@ -20,11 +20,14 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	MovieService_CreateBox_FullMethodName     = "/MovieService/CreateBox"
+	MovieService_DeleteBox_FullMethodName     = "/MovieService/DeleteBox"
 	MovieService_AddToBox_FullMethodName      = "/MovieService/AddToBox"
 	MovieService_RemoveFromBox_FullMethodName = "/MovieService/RemoveFromBox"
 	MovieService_GetBox_FullMethodName        = "/MovieService/GetBox"
 	MovieService_SetBox_FullMethodName        = "/MovieService/SetBox"
 	MovieService_UserOfBox_FullMethodName     = "/MovieService/UserOfBox"
+	MovieService_BoxOfUser_FullMethodName     = "/MovieService/BoxOfUser"
+	MovieService_ValidateOwner_FullMethodName = "/MovieService/ValidateOwner"
 	MovieService_GetMovie_FullMethodName      = "/MovieService/GetMovie"
 )
 
@@ -33,11 +36,14 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MovieServiceClient interface {
 	CreateBox(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*MovieBoxIdentifier, error)
+	DeleteBox(ctx context.Context, in *MovieBoxIdentifier, opts ...grpc.CallOption) (*MovieActionResponse, error)
 	AddToBox(ctx context.Context, in *UserBoxRequest, opts ...grpc.CallOption) (*MovieActionResponse, error)
 	RemoveFromBox(ctx context.Context, in *UserBoxRequest, opts ...grpc.CallOption) (*MovieActionResponse, error)
 	GetBox(ctx context.Context, in *MovieBoxIdentifier, opts ...grpc.CallOption) (*MovieBox, error)
 	SetBox(ctx context.Context, in *MovieBox, opts ...grpc.CallOption) (*MovieActionResponse, error)
 	UserOfBox(ctx context.Context, in *MovieBoxIdentifier, opts ...grpc.CallOption) (*UserOfBoxResponse, error)
+	BoxOfUser(ctx context.Context, in *BoxOfUserRequest, opts ...grpc.CallOption) (*MovieBoxIdentifier, error)
+	ValidateOwner(ctx context.Context, in *UserBoxRequest, opts ...grpc.CallOption) (*MovieActionResponse, error)
 	GetMovie(ctx context.Context, in *MovieIdentifier, opts ...grpc.CallOption) (*Movie, error)
 }
 
@@ -52,6 +58,15 @@ func NewMovieServiceClient(cc grpc.ClientConnInterface) MovieServiceClient {
 func (c *movieServiceClient) CreateBox(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*MovieBoxIdentifier, error) {
 	out := new(MovieBoxIdentifier)
 	err := c.cc.Invoke(ctx, MovieService_CreateBox_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *movieServiceClient) DeleteBox(ctx context.Context, in *MovieBoxIdentifier, opts ...grpc.CallOption) (*MovieActionResponse, error) {
+	out := new(MovieActionResponse)
+	err := c.cc.Invoke(ctx, MovieService_DeleteBox_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +118,24 @@ func (c *movieServiceClient) UserOfBox(ctx context.Context, in *MovieBoxIdentifi
 	return out, nil
 }
 
+func (c *movieServiceClient) BoxOfUser(ctx context.Context, in *BoxOfUserRequest, opts ...grpc.CallOption) (*MovieBoxIdentifier, error) {
+	out := new(MovieBoxIdentifier)
+	err := c.cc.Invoke(ctx, MovieService_BoxOfUser_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *movieServiceClient) ValidateOwner(ctx context.Context, in *UserBoxRequest, opts ...grpc.CallOption) (*MovieActionResponse, error) {
+	out := new(MovieActionResponse)
+	err := c.cc.Invoke(ctx, MovieService_ValidateOwner_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *movieServiceClient) GetMovie(ctx context.Context, in *MovieIdentifier, opts ...grpc.CallOption) (*Movie, error) {
 	out := new(Movie)
 	err := c.cc.Invoke(ctx, MovieService_GetMovie_FullMethodName, in, out, opts...)
@@ -117,11 +150,14 @@ func (c *movieServiceClient) GetMovie(ctx context.Context, in *MovieIdentifier, 
 // for forward compatibility
 type MovieServiceServer interface {
 	CreateBox(context.Context, *CreateRequest) (*MovieBoxIdentifier, error)
+	DeleteBox(context.Context, *MovieBoxIdentifier) (*MovieActionResponse, error)
 	AddToBox(context.Context, *UserBoxRequest) (*MovieActionResponse, error)
 	RemoveFromBox(context.Context, *UserBoxRequest) (*MovieActionResponse, error)
 	GetBox(context.Context, *MovieBoxIdentifier) (*MovieBox, error)
 	SetBox(context.Context, *MovieBox) (*MovieActionResponse, error)
 	UserOfBox(context.Context, *MovieBoxIdentifier) (*UserOfBoxResponse, error)
+	BoxOfUser(context.Context, *BoxOfUserRequest) (*MovieBoxIdentifier, error)
+	ValidateOwner(context.Context, *UserBoxRequest) (*MovieActionResponse, error)
 	GetMovie(context.Context, *MovieIdentifier) (*Movie, error)
 	mustEmbedUnimplementedMovieServiceServer()
 }
@@ -132,6 +168,9 @@ type UnimplementedMovieServiceServer struct {
 
 func (UnimplementedMovieServiceServer) CreateBox(context.Context, *CreateRequest) (*MovieBoxIdentifier, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateBox not implemented")
+}
+func (UnimplementedMovieServiceServer) DeleteBox(context.Context, *MovieBoxIdentifier) (*MovieActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteBox not implemented")
 }
 func (UnimplementedMovieServiceServer) AddToBox(context.Context, *UserBoxRequest) (*MovieActionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddToBox not implemented")
@@ -147,6 +186,12 @@ func (UnimplementedMovieServiceServer) SetBox(context.Context, *MovieBox) (*Movi
 }
 func (UnimplementedMovieServiceServer) UserOfBox(context.Context, *MovieBoxIdentifier) (*UserOfBoxResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserOfBox not implemented")
+}
+func (UnimplementedMovieServiceServer) BoxOfUser(context.Context, *BoxOfUserRequest) (*MovieBoxIdentifier, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BoxOfUser not implemented")
+}
+func (UnimplementedMovieServiceServer) ValidateOwner(context.Context, *UserBoxRequest) (*MovieActionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateOwner not implemented")
 }
 func (UnimplementedMovieServiceServer) GetMovie(context.Context, *MovieIdentifier) (*Movie, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMovie not implemented")
@@ -178,6 +223,24 @@ func _MovieService_CreateBox_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MovieServiceServer).CreateBox(ctx, req.(*CreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MovieService_DeleteBox_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MovieBoxIdentifier)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MovieServiceServer).DeleteBox(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MovieService_DeleteBox_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MovieServiceServer).DeleteBox(ctx, req.(*MovieBoxIdentifier))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -272,6 +335,42 @@ func _MovieService_UserOfBox_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MovieService_BoxOfUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BoxOfUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MovieServiceServer).BoxOfUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MovieService_BoxOfUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MovieServiceServer).BoxOfUser(ctx, req.(*BoxOfUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MovieService_ValidateOwner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserBoxRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MovieServiceServer).ValidateOwner(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MovieService_ValidateOwner_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MovieServiceServer).ValidateOwner(ctx, req.(*UserBoxRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _MovieService_GetMovie_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MovieIdentifier)
 	if err := dec(in); err != nil {
@@ -302,6 +401,10 @@ var MovieService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MovieService_CreateBox_Handler,
 		},
 		{
+			MethodName: "DeleteBox",
+			Handler:    _MovieService_DeleteBox_Handler,
+		},
+		{
 			MethodName: "AddToBox",
 			Handler:    _MovieService_AddToBox_Handler,
 		},
@@ -320,6 +423,14 @@ var MovieService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UserOfBox",
 			Handler:    _MovieService_UserOfBox_Handler,
+		},
+		{
+			MethodName: "BoxOfUser",
+			Handler:    _MovieService_BoxOfUser_Handler,
+		},
+		{
+			MethodName: "ValidateOwner",
+			Handler:    _MovieService_ValidateOwner_Handler,
 		},
 		{
 			MethodName: "GetMovie",
