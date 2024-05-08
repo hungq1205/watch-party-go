@@ -140,7 +140,7 @@ func MessageHandler(c echo.Context) error {
 		conn.Close()
 		return c.Redirect(http.StatusPermanentRedirect, "/login")
 	}
-	msgBox, err := movieServiceClient.GetBox(c.Request().Context(), &movies.MovieBoxIdentifier{
+	mvBox, err := movieServiceClient.GetBox(c.Request().Context(), &movies.MovieBoxIdentifier{
 		BoxId: box.BoxId,
 	})
 	if err != nil {
@@ -151,10 +151,10 @@ func MessageHandler(c echo.Context) error {
 
 	websocket.Handler(func(ws *websocket.Conn) {
 		defer ws.Close()
-		if internal.MsgBoxes[msgBox.MsgBoxId].Clients == nil {
-			internal.AppendNewMsgBox(msgBox.MsgBoxId, auth.UserID)
+		if internal.MsgBoxes[mvBox.MsgBoxId].Clients == nil {
+			internal.AppendNewMsgBox(mvBox.MsgBoxId, auth.UserID)
 		}
-		internal.MsgBoxes[msgBox.MsgBoxId].AppendNew(auth.UserID, auth.Username, ws)
+		internal.MsgBoxes[mvBox.MsgBoxId].AppendNew(auth.UserID, auth.Username, ws)
 		for {
 			var data internal.ClientData
 			err = websocket.JSON.Receive(ws, &data)
@@ -162,15 +162,17 @@ func MessageHandler(c echo.Context) error {
 				break
 			}
 
-			err = internal.MsgBoxes[msgBox.MsgBoxId].Broadcast(auth.UserID, &data)
+			err = internal.MsgBoxes[mvBox.MsgBoxId].Broadcast(auth.UserID, &data)
 			if err != nil {
 				break
 			}
 		}
-		c.Logger().Print(fmt.Sprintf("deleted box %v", box.BoxId))
-		err = UncheckDeleteBox(c, box.BoxId)
-		if err != nil && status.Code(err) == codes.NotFound {
-			err = nil
+		if auth.UserID == mvBox.OwnerId {
+			c.Logger().Print(fmt.Sprintf("deleted box %v", box.BoxId))
+			err = UncheckDeleteBox(c, box.BoxId)
+			if err != nil && status.Code(err) == codes.NotFound {
+				err = nil
+			}
 		}
 	}).ServeHTTP(c.Response(), c.Request())
 	return err

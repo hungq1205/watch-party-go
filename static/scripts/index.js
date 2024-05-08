@@ -37,9 +37,10 @@ window.onload = function () {
                     if (data.is_owner)
                     {
                         ownerLayout(true);
+                        setInterval(updateParticipantReq, 3000);
                         setInterval(sendMovieData, 1000);
                         media.on("pause", sendMovieData);
-                        media.on("timeupdate", sendMovieData);
+                        media.on("play", sendMovieData);
                     }
                     else
                         ownerLayout(false);
