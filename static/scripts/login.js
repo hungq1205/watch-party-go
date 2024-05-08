@@ -28,7 +28,7 @@ form.addEventListener("submit", e => {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: data
-        }).then(function(res) {
+        }).then((function(res) {
             if (res.status == 201 || res.status == 200) 
                 {
                     alert("Signed up");
@@ -39,7 +39,7 @@ form.addEventListener("submit", e => {
                     .then(text => alert(text))
                     .catch(err => alert(err));
         })
-        .catch(err => alert(err))
+        .catch(err => alert(err)))
     }
     else {
         data.delete("display_name");
@@ -53,7 +53,7 @@ form.addEventListener("submit", e => {
         }).then(function(res) {
             if (res.status == 200) {
                 alert("Logged in");
-                window.location.replace("http://localhost:3000/");
+                window.location.replace("http://localhost:3000/lobby");
             }
             else {
                 res.text()

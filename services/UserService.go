@@ -5,13 +5,14 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/base64"
+	"fmt"
 	"log"
 	"net"
 	"sync"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/hungq1205/watch-party/internal"
 	"github.com/hungq1205/watch-party/protogen/users"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -127,9 +128,8 @@ func (s *UserService) LogIn(ctx context.Context, req *users.LogInRequest) (*user
 	var id int64
 	err = row.Scan(&id)
 
-	tc := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": id,
-		"exp": time.Now().Add(time.Second * 60).Unix(),
+	tc := jwt.NewWithClaims(jwt.SigningMethodHS256, internal.MyCustomClaims{
+		UserId: id,
 	})
 
 	token, err := tc.SignedString([]byte("secret"))
@@ -153,40 +153,36 @@ func (s *UserService) Authenticate(ctx context.Context, req *users.AuthenticateR
 	}
 	defer db.Close()
 
-	token, err := jwt.Parse(req.JwtToken, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, status.Errorf(codes.InvalidArgument, "unexpected signing method: %v", token)
-		}
-
+	var claims internal.MyCustomClaims
+	_, err = jwt.ParseWithClaims(req.JwtToken, &claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte("secret"), nil
 	})
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid claims:")
+	if err != nil {
+		return nil, err
 	}
 
-	id := claims["sub"].(int64)
-	row, err := db.Query("SELECT username FROM Users WHERE id=?", id)
+	id := claims.UserId
+
+	row, err := db.Query("SELECT display_name FROM Users WHERE id=?", id)
 	if err != nil {
 		return nil, err
 	}
 	defer row.Close()
 
-	var username string
+	var displayName string
 
 	if row.Next() {
-		err = row.Scan(&username)
+		err = row.Scan(&displayName)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		return nil, status.Errorf(codes.NotFound, "Unable to find user")
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("Unable to find user %v", id))
 	}
 
 	return &users.AuthenticateResponse{
 		UserID:   id,
-		Username: username,
+		Username: displayName,
 	}, nil
 }
 

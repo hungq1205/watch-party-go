@@ -1,17 +1,20 @@
 package services
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/hungq1205/watch-party/internal"
 	"github.com/hungq1205/watch-party/protogen/messages"
 	"github.com/hungq1205/watch-party/protogen/movies"
 	"github.com/hungq1205/watch-party/protogen/users"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"golang.org/x/net/websocket"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -25,7 +28,9 @@ const (
 	movieServiceAddr   = ":3003"
 )
 
-var lock = sync.Mutex{}
+var (
+	lock = sync.Mutex{}
+)
 
 type RenderService struct {
 }
@@ -36,8 +41,12 @@ func (s *RenderService) Start() *grpc.Server {
 	e.Use(middleware.Static("static"))
 
 	e.GET("/", MainPage)
+	e.GET("/box", MainPage)
 	e.GET("/login", LogInPage)
+	e.GET("/lobby", LobbyPage)
+	e.GET("/ws", MessageHandler)
 
+	e.POST("/join", JoinBox)
 	e.POST("/login", LogIn)
 	e.POST("/signup", SignUp)
 	e.POST("/create", CreateBox)
@@ -51,9 +60,176 @@ func (s *RenderService) Start() *grpc.Server {
 	return nil
 }
 
+func LogInPage(c echo.Context) error {
+	_, err := Authenticate(c)
+	if err == nil {
+		return c.Redirect(http.StatusPermanentRedirect, "/lobby")
+	}
+
+	return c.File("static/views/login.html")
+}
+
+func LobbyPage(c echo.Context) error {
+	auth, err := Authenticate(c)
+	if err != nil {
+		if status.Code(err) == codes.Unauthenticated {
+			return c.Redirect(http.StatusPermanentRedirect, "/login")
+		}
+
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	conn := NewGRPCClientConn(movieServiceAddr)
+	movieServiceClient := movies.NewMovieServiceClient(conn)
+	defer conn.Close()
+
+	_, err = movieServiceClient.BoxOfUser(c.Request().Context(), &movies.BoxOfUserRequest{
+		UserId: auth.UserID,
+	})
+	if err == nil {
+		return c.Redirect(http.StatusMovedPermanently, "/box")
+	}
+
+	return c.File("static/views/lobby.html")
+}
+
+func MainPage(c echo.Context) error {
+	_, err := Authenticate(c)
+	if err != nil {
+		if status.Code(err) == codes.Unauthenticated {
+			return c.Redirect(http.StatusPermanentRedirect, "/login")
+		}
+
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	return c.File("static/views/index.html")
+}
+
+func MessageHandler(c echo.Context) error {
+	auth, err := Authenticate(c)
+	if err != nil {
+		if status.Code(err) == codes.Unauthenticated {
+			return c.Redirect(http.StatusPermanentRedirect, "/login")
+		}
+
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	conn := NewGRPCClientConn(movieServiceAddr)
+	movieServiceClient := movies.NewMovieServiceClient(conn)
+	box, err := movieServiceClient.BoxOfUser(c.Request().Context(), &movies.BoxOfUserRequest{
+		UserId: auth.UserID,
+	})
+	if err != nil {
+		conn.Close()
+		return c.Redirect(http.StatusPermanentRedirect, "/login")
+	}
+	msgBox, err := movieServiceClient.GetBox(c.Request().Context(), &movies.MovieBoxIdentifier{
+		BoxId: box.BoxId,
+	})
+	if err != nil {
+		conn.Close()
+		return c.Redirect(http.StatusPermanentRedirect, "/login")
+	}
+	conn.Close()
+
+	websocket.Handler(func(ws *websocket.Conn) {
+		defer ws.Close()
+		if internal.MsgBoxes[msgBox.MsgBoxId].Clients == nil {
+			internal.AppendNewMsgBox(msgBox.MsgBoxId)
+		}
+		internal.MsgBoxes[msgBox.MsgBoxId].AppendNew(auth.UserID, auth.Username, ws)
+		for {
+			var data internal.ClientData
+			err = websocket.JSON.Receive(ws, &data)
+			if err != nil {
+				break
+			}
+
+			err = internal.MsgBoxes[msgBox.MsgBoxId].Broadcast(auth.UserID, &data)
+			if err != nil {
+				break
+			}
+		}
+		c.Logger().Print(fmt.Sprintf("deleted box %v", box.BoxId))
+		err = UncheckDeleteBox(c, box.BoxId)
+	}).ServeHTTP(c.Response(), c.Request())
+	return err
+}
+
+func JoinBox(c echo.Context) error {
+	auth, err := Authenticate(c)
+	if err != nil {
+		if status.Code(err) == codes.Unauthenticated {
+			return c.Redirect(http.StatusPermanentRedirect, "/login")
+		}
+
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	password := c.FormValue("password")
+	rawBoxId, err := strconv.Atoi(c.FormValue("box_id"))
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+	boxId := int64(rawBoxId)
+
+	conn := NewGRPCClientConn(movieServiceAddr)
+	movieServiceClient := movies.NewMovieServiceClient(conn)
+	defer conn.Close()
+
+	_, err = movieServiceClient.BoxOfUser(c.Request().Context(), &movies.BoxOfUserRequest{
+		UserId: auth.UserID,
+	})
+	if err == nil {
+		return c.Redirect(http.StatusMovedPermanently, "/box")
+	} else if status.Code(err) != codes.NotFound {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	boxRes, err := movieServiceClient.GetBox(c.Request().Context(), &movies.MovieBoxIdentifier{
+		BoxId: boxId,
+	})
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return c.String(http.StatusNotFound, "Movie box doesn't exist")
+		}
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	if boxRes.Password != password {
+		return c.String(http.StatusBadRequest, "Incorrect password or box ID for movie box")
+	}
+
+	_, err = movieServiceClient.AddToBox(c.Request().Context(), &movies.UserBoxRequest{
+		UserId: auth.UserID,
+		BoxId:  boxId,
+	})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	msgconn := NewGRPCClientConn(messageServiceAddr)
+	msgServiceClient := messages.NewMessageServiceClient(msgconn)
+	defer msgconn.Close()
+
+	_, err = msgServiceClient.AddUserToBox(c.Request().Context(), &messages.UserBox{
+		UserId: auth.UserID,
+		BoxId:  boxRes.MsgBoxId,
+	})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
 func DeleteBox(c echo.Context) error {
 	auth, err := Authenticate(c)
 	if err != nil {
+		if status.Code(err) == codes.Unauthenticated {
+			return c.Redirect(http.StatusPermanentRedirect, "/login")
+		}
+
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -88,7 +264,7 @@ func DeleteBox(c echo.Context) error {
 	msgconn := NewGRPCClientConn(messageServiceAddr)
 	msgServiceClient := messages.NewMessageServiceClient(msgconn)
 
-	_, err = msgServiceClient.DeleteMessages(c.Request().Context(), &messages.QueryMessageRequest{
+	_, err = msgServiceClient.DeleteMessageBox(c.Request().Context(), &messages.MessageBoxIdentifier{
 		BoxId: boxRes.MsgBoxId,
 	})
 	if err != nil {
@@ -99,21 +275,59 @@ func DeleteBox(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+func UncheckDeleteBox(c echo.Context, boxId int64) error {
+	conn := NewGRPCClientConn(movieServiceAddr)
+	movieServiceClient := movies.NewMovieServiceClient(conn)
+
+	boxRes, err := movieServiceClient.GetBox(c.Request().Context(), &movies.MovieBoxIdentifier{
+		BoxId: boxId,
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = movieServiceClient.DeleteBox(c.Request().Context(), &movies.MovieBoxIdentifier{
+		BoxId: boxId,
+	})
+	if err != nil {
+		return err
+	}
+	conn.Close()
+
+	msgconn := NewGRPCClientConn(messageServiceAddr)
+	msgServiceClient := messages.NewMessageServiceClient(msgconn)
+
+	_, err = msgServiceClient.DeleteMessageBox(c.Request().Context(), &messages.MessageBoxIdentifier{
+		BoxId: boxRes.MsgBoxId,
+	})
+	if err != nil {
+		return err
+	}
+	msgconn.Close()
+
+	return nil
+}
+
 func CreateBox(c echo.Context) error {
 	auth, err := Authenticate(c)
 	if err != nil {
+		if status.Code(err) == codes.Unauthenticated {
+			return c.Redirect(http.StatusPermanentRedirect, "/login")
+		}
+
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	password := c.QueryParam("password")
+	password := c.FormValue("password")
 
 	msgconn := NewGRPCClientConn(messageServiceAddr)
 	msgServiceClient := messages.NewMessageServiceClient(msgconn)
 
 	msgRes, err := msgServiceClient.CreateMessageBox(c.Request().Context(), &messages.UserGroup{
-		UserIds: []int64{auth.UserID},
+		UserIds: []int64{},
 	})
 	if err != nil {
+		msgconn.Close()
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 	msgconn.Close()
@@ -131,15 +345,9 @@ func CreateBox(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, res.BoxId)
-}
+	internal.AppendNewMsgBox(msgRes.BoxId)
 
-func LogInPage(c echo.Context) error {
-	return c.File("static/views/login.html")
-}
-
-func MainPage(c echo.Context) error {
-	return c.File("static/views/index.html")
+	return c.JSON(http.StatusOK, res)
 }
 
 func LogIn(c echo.Context) error {
@@ -171,7 +379,7 @@ func LogIn(c echo.Context) error {
 	}
 	c.SetCookie(token)
 
-	return c.String(http.StatusOK, "Logged in")
+	return c.NoContent(http.StatusOK)
 }
 
 func SignUp(c echo.Context) error {
@@ -195,20 +403,25 @@ func SignUp(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.String(http.StatusCreated, "Signed up")
+	return c.NoContent(http.StatusCreated)
 }
 
 func Authenticate(c echo.Context) (*users.AuthenticateResponse, error) {
 	jwtcookie, err := c.Cookie("jwtcookie")
-	if err != nil {
-		return nil, err
+	if err != nil || jwtcookie == nil {
+		c.Logger().Printf("unauth")
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticate")
 	}
 
 	conn := NewGRPCClientConn(userServiceAddr)
 	userServiceClient := users.NewUserServiceClient(conn)
 	defer conn.Close()
 
-	return userServiceClient.Authenticate(c.Request().Context(), &users.AuthenticateRequest{JwtToken: jwtcookie.Value})
+	value := jwtcookie.Value
+	req := users.AuthenticateRequest{JwtToken: value}
+	res, err := userServiceClient.Authenticate(c.Request().Context(), &req)
+
+	return res, err
 }
 
 func NewGRPCClientConn(addr string) *grpc.ClientConn {

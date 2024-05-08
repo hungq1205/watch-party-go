@@ -12,7 +12,9 @@ import (
 	mes "github.com/hungq1205/watch-party/protogen/messages"
 	"github.com/hungq1205/watch-party/protogen/users"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 )
 
 const msg_connectionStr = "root:hungthoi@tcp(127.0.0.1:3306)/message_service"
@@ -69,6 +71,15 @@ func (s *MessageService) AddUserToBox(ctx context.Context, req *mes.UserBox) (*m
 	}
 	defer db.Close()
 
+	row, err := db.Query("SELECT * FROM MsgBox_user WHERE box_id=? AND user_id=?", req.BoxId, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	if row.Next() {
+		return &mes.ActionResponse{Success: true}, nil
+	}
+	row.Close()
+
 	_, err = db.Exec("INSERT INTO MsgBox_user (box_id, user_id) VALUES (?, ?)", req.BoxId, req.UserId)
 	if err != nil {
 		return nil, err
@@ -87,7 +98,7 @@ func (s *MessageService) CreateMessageBox(ctx context.Context, req *mes.UserGrou
 	}
 	defer db.Close()
 
-	idRef, err := db.Exec("INSERT INTO MessageBoxes VALUES (NULL)")
+	idRef, err := db.Exec("INSERT INTO MessageBoxes (box_id) VALUES (0)")
 	if err != nil {
 		return nil, err
 	}
@@ -110,6 +121,15 @@ func (s *MessageService) CreateMessageBox(ctx context.Context, req *mes.UserGrou
 	}
 
 	for idx, exist := range exists.Exists {
+		row, err := db.Query("SELECT * FROM MsgBox_user WHERE box_id=? AND user_id=?", box_id, req.UserIds[idx])
+		if err != nil {
+			return nil, err
+		}
+		if row.Next() {
+			continue
+		}
+		row.Close()
+
 		if exist {
 			_, err := db.Exec("INSERT INTO MsgBox_User (box_id, user_id) VALUES (?, ?)", box_id, req.UserIds[idx])
 			if err != nil {
@@ -283,7 +303,7 @@ func (s *MessageService) GetMessage(ctx context.Context, req *mes.MessageIdentif
 	defer row.Close()
 
 	if !row.Next() {
-		return nil, err
+		return nil, status.Error(codes.NotFound, "message doesnt exists")
 	}
 
 	var m mes.Message

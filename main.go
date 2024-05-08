@@ -5,16 +5,12 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/hungq1205/watch-party/internal"
 	"github.com/hungq1205/watch-party/services"
-	"google.golang.org/grpc"
 )
 
-type Service interface {
-	Start() *grpc.Server
-}
-
 func main() {
-	serviceList := []Service{
+	serviceList := []internal.Service{
 		&services.UserService{},
 		&services.MessageService{},
 		&services.MovieService{},

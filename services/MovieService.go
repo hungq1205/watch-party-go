@@ -11,7 +11,9 @@ import (
 	"github.com/hungq1205/watch-party/protogen/movies"
 	"github.com/hungq1205/watch-party/protogen/users"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 )
 
 const mv_connectionStr = "root:hungthoi@tcp(127.0.0.1:3306)/movie_service"
@@ -84,7 +86,7 @@ func (s *MovieService) CreateBox(ctx context.Context, req *movies.CreateRequest)
 		return nil, errors.New("movie box owner doesn't exists")
 	}
 
-	idRef, err := db.Exec("INSERT INTO MovieBoxes (owner_id, password) VALUES (?, ?)", req.OwnerId, req.Password)
+	idRef, err := db.Exec("INSERT INTO MovieBoxes (owner_id, password, msg_box_id, elapsed, movie_url) VALUES (?, ?, ?, 0, '')", req.OwnerId, req.Password, req.MsgBoxId)
 	if err != nil {
 		return nil, err
 	}
@@ -183,11 +185,11 @@ func (s *MovieService) GetBox(ctx context.Context, req *movies.MovieBoxIdentifie
 	defer row.Close()
 
 	if !row.Next() {
-		return nil, nil
+		return nil, status.Error(codes.NotFound, "box doesnt exists")
 	}
 
 	var box movies.MovieBox
-	err = row.Scan(&box.BoxId, &box.OwnerId, &box.Elapsed, &box.MovieUrl, &box.Password)
+	err = row.Scan(&box.BoxId, &box.OwnerId, &box.MsgBoxId, &box.Elapsed, &box.MovieUrl, &box.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +262,7 @@ func (s *MovieService) BoxOfUser(ctx context.Context, req *movies.BoxOfUserReque
 
 	var boxId int64
 	if !row.Next() {
-		return nil, nil
+		return nil, status.Error(codes.NotFound, "box not found")
 	}
 
 	err = row.Scan(&boxId)
@@ -288,7 +290,7 @@ func (s *MovieService) GetMovie(ctx context.Context, req *movies.MovieIdentifier
 	defer row.Close()
 
 	if !row.Next() {
-		return nil, nil
+		return nil, status.Error(codes.NotFound, "movie doesnt exists")
 	}
 
 	var mv movies.Movie
