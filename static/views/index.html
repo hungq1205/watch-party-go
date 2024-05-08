@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="Expires" content="-1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="/styles/index.css">
+    <link rel="stylesheet" href="index.css">
     <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
     <title>Watch Party</title>
 </head>
@@ -50,7 +53,7 @@
     <main>
         <div class="player-container">
             <div class="media-container">
-                <div style="height: 100%; width: 100%; box-sizing: content-box;">
+                <div style="height: 100%; width: 100%; box-sizing: content-box; display: inline-flex;flex-direction: column;justify-content: center;">
                     <video id="media-player" class="video-js">
                     </video>
                 </div>
@@ -61,9 +64,6 @@
                 <li id="request-pause" class="btn btn-primary">
                     <div>Request pause</div>
                 </li>
-                <li id="request-control" class="btn btn-primary">
-                    <div>Request control</div>
-                </li>
                 <li id="expand">
                     <i class="fa-solid fa-expand"></i>
                 </li>
@@ -72,16 +72,19 @@
         <div class="chat-box">
             <div class="header">
                 <div class="desc">
-                    <div id="media-box-name">Watch party</div>
+                    <div class="media-box-desc">
+                        <div id="media-box-name">Watch party</div>
+                        <div id="box-id">#0</div>
+                    </div>
                     <div class="media-participant-count">
                         <i class="fa-solid fa-user"></i>
                         <div id="participant-value">1</div>
                     </div>
                 </div>
-                <div id="invite">
-                    <i class="fa-solid fa-user-plus"></i>
+                <div id="leave">
+                    <i class="fa-solid fa-right-from-bracket"></i>
                 </div>
-                <div id="power-off">
+                <div id="power-off" class="d-none">
                     <i class="fa-solid fa-power-off"></i>
                 </div>
             </div>
@@ -97,5 +100,6 @@
     <script src="https://kit.fontawesome.com/79a53aa110.js" crossorigin="anonymous"></script>
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script src="/scripts/index.js"></script>
+    <script src="index.js"></script>
 </body>
 </html>

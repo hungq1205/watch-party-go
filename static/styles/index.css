@@ -59,7 +59,7 @@ aside {
 
 .player-container {
     height: 100%;
-    width: 82%;
+    width: 77%;
     display: inline-flex;
     flex-direction: column;
     background: rgb(25, 29, 33);
@@ -134,7 +134,7 @@ aside {
     flex: 1;
 }
 
-#invite, #power-off {
+#leave, #power-off {
     height: 100%;
     color: rgb(200, 200, 200);
     font-size: 22px;
@@ -142,11 +142,26 @@ aside {
     cursor: pointer;
 }
 
+.media-box-desc {
+    display: inline-flex;
+    flex-direction: row;
+}
+
 #media-box-name {
     color: rgb(200, 200, 200);
     font-size: 24px;
     font-weight: bold;
     cursor: default;
+}
+
+#box-id {
+    color: rgb(153, 153, 153);
+    font-size: 18px;
+    font-weight: bold;
+    cursor: default;
+    margin-top: 12px;
+    margin-left: 7px;
+    text-align: bottom;
 }
 
 .media-participant-count {

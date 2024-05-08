@@ -5,6 +5,8 @@ const displayName = document.getElementById("display-name");
 const submit = document.getElementById("submit");
 const form = document.querySelector("form");
 
+const webAddr = "117.6.56.99";
+
 window.onload = function() {
     alterOption.onclick = function() {
         isSignup = !isSignup;
@@ -21,7 +23,7 @@ form.addEventListener("submit", e => {
 
     if (isSignup) {
         data.set("display_name", data.get("display_name").trim());
-        fetch('http://localhost:3000/signup', {
+        fetch('http://' + webAddr + ':3000/signup', {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -32,7 +34,7 @@ form.addEventListener("submit", e => {
             if (res.status == 201 || res.status == 200) 
                 {
                     alert("Signed up");
-                    window.location.replace("http://localhost:3000/login");
+                    window.location.replace('http://' + webAddr + ':3000/login');
                 }
             else
                 res.text()
@@ -43,7 +45,7 @@ form.addEventListener("submit", e => {
     }
     else {
         data.delete("display_name");
-        fetch('http://localhost:3000/login', {
+        fetch('http://' + webAddr + ':3000/login', {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -53,7 +55,7 @@ form.addEventListener("submit", e => {
         }).then(function(res) {
             if (res.status == 200) {
                 alert("Logged in");
-                window.location.replace("http://localhost:3000/lobby");
+                window.location.replace('http://' + webAddr + ':3000/lobby');
             }
             else {
                 res.text()

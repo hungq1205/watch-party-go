@@ -5,6 +5,8 @@ const boxId = document.getElementById("box-id");
 const submit = document.getElementById("submit");
 const form = document.querySelector("form");
 
+const webAddr = "117.6.56.99";
+
 window.onload = function() {
     alterOption.onclick = function() {
         isCreate = !isCreate;
@@ -19,7 +21,7 @@ form.addEventListener("submit", e => {
 
     if (isCreate) {
         data.delete("box_id");
-        fetch('http://localhost:3000/create', {
+        fetch('http://' + webAddr + ':3000/create', {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -48,7 +50,7 @@ form.addEventListener("submit", e => {
 });
 
 function joinBox(fdata) {
-    fetch('http://localhost:3000/join', {
+    fetch('http://' + webAddr + ':3000/join', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -57,9 +59,10 @@ function joinBox(fdata) {
         body: fdata
     }).then(function(res) {
         if (res.status == 200) {
-            window.location.href = "http://localhost:3000/box";
+            window.location.reload();
         }
         else {
+            window.location.reload();
             res.text()
             .then(text => alert(text))
             .catch(err => alert(err));

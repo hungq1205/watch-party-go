@@ -25,13 +25,19 @@ type MsgBox struct {
 }
 
 type ClientData struct {
-	Datatype int     `json:"datatype"`
-	Username string  `json:"username"`
-	Content  string  `json:"content"`
-	MovieUrl string  `json:"movie_url"`
-	Elapsed  float64 `json:"elapsed"`
-	IsPause  bool    `json:"is_pause"`
-	IsOwner  bool    `json:"is_owner"`
+	Datatype   int     `json:"datatype"`
+	Username   string  `json:"username"`
+	Content    string  `json:"content"`
+	BoxUserNum int     `json:"box_user_num"`
+	MovieUrl   string  `json:"movie_url"`
+	Elapsed    float64 `json:"elapsed"`
+	IsPause    bool    `json:"is_pause"`
+	IsOwner    bool    `json:"is_owner"`
+}
+
+type ClientBoxData struct {
+	BoxId   int64 `json:"box_id"`
+	IsOwner bool  `json:"is_owner"`
 }
 
 type MyCustomClaims struct {
@@ -41,10 +47,12 @@ type MyCustomClaims struct {
 
 func (s *MsgBox) Broadcast(fromUserId int64, data *ClientData) error {
 	for _, client := range s.Clients {
-		if client.UserId == fromUserId {
+		if client.UserId == fromUserId && data.Datatype != 2 {
 			continue
 		}
 		data.IsOwner = client.UserId == s.OwnerId
+		data.Username = client.Username
+		data.BoxUserNum = len(s.Clients)
 
 		err := websocket.JSON.Send(client.Conn, &data)
 		if err != nil {
@@ -72,8 +80,8 @@ func (s *MsgBox) AppendNew(userId int64, username string, conn *websocket.Conn) 
 	s.Clients = append(s.Clients, client)
 }
 
-func AppendNewMsgBox(boxId int64) {
-	MsgBoxes[boxId] = &MsgBox{}
+func AppendNewMsgBox(boxId int64, ownerId int64) {
+	MsgBoxes[boxId] = &MsgBox{OwnerId: ownerId}
 	MsgBoxes[boxId].Clients = make([]*Client, 0)
 }
 
