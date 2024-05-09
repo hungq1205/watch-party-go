@@ -95,11 +95,17 @@ document.getElementById("power-off").onclick = function () {
     ws.close();
     fetch('http://' + webAddr + ':3000/delete', {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            'Cache-Control': 'must-revalidate,no-cache,no-store',
+        }
     }).then(function(res) {
-        if (res.status == 200 || res.status == 308) 
+        if (res.status == 200 || res.status == 401 || res.status == 404) 
             {
-                window.location.replace('http://' + webAddr + ':3000/login');
+                res.text().then(text => {
+                    console.log(text);
+                    window.location.href = 'http://' + webAddr + ':3000/login';
+                });
             }
         else
             res.text()
@@ -113,11 +119,14 @@ document.getElementById("leave").onclick = function () {
     ws.close();
     fetch('http://' + webAddr + ':3000/leave', {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            'Cache-Control': 'must-revalidate,no-cache,no-store',
+        }
     }).then(function(res) {
-        if (res.status == 200 || res.status == 308) 
+        if (res.status == 200 || res.status == 401 || res.status == 404) 
             {
-                window.location.replace('http://' + webAddr + ':3000/login');
+                window.location = ('http://' + webAddr + ':3000/login');
             }
         else
             res.text()

@@ -27,11 +27,12 @@ form.addEventListener("submit", e => {
             method: 'POST',
             credentials: 'include',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Cache-Control': 'must-revalidate,no-cache,no-store'
             },
             body: data
         }).then((function(res) {
-            if (res.status == 201 || res.status == 200) 
+            if (res.status == 201 || res.status == 200 || res.status == 401) 
                 {
                     alert("Signed up");
                     window.location.replace('http://' + webAddr + ':3000/login');
@@ -49,7 +50,8 @@ form.addEventListener("submit", e => {
             method: 'POST',
             credentials: 'include',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Cache-Control': 'must-revalidate,no-cache,no-store'
             },
             body: data
         }).then(function(res) {

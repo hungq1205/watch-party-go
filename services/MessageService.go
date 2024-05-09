@@ -165,19 +165,19 @@ func (s *MessageService) DeleteMessageBox(ctx context.Context, req *mes.MessageB
 		return &mes.ActionResponse{Success: false}, nil
 	}
 
-	row, err = db.Exec("DELETE FROM MsgBox_User WHERE box_id=?", req.BoxId)
+	_, err = db.Exec("DELETE FROM MsgBox_User WHERE box_id=?", req.BoxId)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.DeleteMessages(ctx, &mes.QueryMessageRequest{
-		BoxId:  req.BoxId,
-		UserId: -1,
-	})
+	// _, err = s.DeleteMessages(ctx, &mes.QueryMessageRequest{
+	// 	BoxId:  req.BoxId,
+	// 	UserId: -1,
+	// })
 
-	if err != nil {
-		return nil, err
-	}
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return &mes.ActionResponse{Success: true}, nil
 }

@@ -115,7 +115,7 @@ func MainPage(c echo.Context) error {
 		UserId: auth.UserID,
 	})
 	if err != nil {
-		return c.Redirect(http.StatusPermanentRedirect, "/login")
+		return c.String(http.StatusUnauthorized, err.Error())
 	}
 
 	return c.File("static/views/index.html")
@@ -125,7 +125,7 @@ func MessageHandler(c echo.Context) error {
 	auth, err := Authenticate(c)
 	if err != nil {
 		if status.Code(err) == codes.Unauthenticated {
-			return c.Redirect(http.StatusPermanentRedirect, "/login")
+			return c.String(http.StatusUnauthorized, err.Error())
 		}
 
 		return c.String(http.StatusInternalServerError, err.Error())
@@ -138,14 +138,14 @@ func MessageHandler(c echo.Context) error {
 	})
 	if err != nil {
 		conn.Close()
-		return c.Redirect(http.StatusPermanentRedirect, "/login")
+		return c.String(http.StatusNotFound, err.Error())
 	}
 	mvBox, err := movieServiceClient.GetBox(c.Request().Context(), &movies.MovieBoxIdentifier{
 		BoxId: box.BoxId,
 	})
 	if err != nil {
 		conn.Close()
-		return c.Redirect(http.StatusPermanentRedirect, "/login")
+		return c.String(http.StatusNotFound, err.Error())
 	}
 	conn.Close()
 
@@ -182,7 +182,7 @@ func JoinBox(c echo.Context) error {
 	auth, err := Authenticate(c)
 	if err != nil {
 		if status.Code(err) == codes.Unauthenticated {
-			return c.Redirect(http.StatusPermanentRedirect, "/login")
+			return c.String(http.StatusUnauthorized, err.Error())
 		}
 
 		return c.String(http.StatusInternalServerError, err.Error())
@@ -203,7 +203,7 @@ func JoinBox(c echo.Context) error {
 		UserId: auth.UserID,
 	})
 	if err == nil {
-		return c.Redirect(http.StatusMovedPermanently, "/box")
+		return c.String(http.StatusConflict, err.Error())
 	} else if status.Code(err) != codes.NotFound {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
@@ -248,7 +248,7 @@ func DeleteBox(c echo.Context) error {
 	auth, err := Authenticate(c)
 	if err != nil {
 		if status.Code(err) == codes.Unauthenticated {
-			return c.String(http.StatusPermanentRedirect, "/login")
+			return c.String(http.StatusUnauthorized, err.Error())
 		}
 
 		return c.String(http.StatusInternalServerError, err.Error())
@@ -260,7 +260,7 @@ func DeleteBox(c echo.Context) error {
 	boxIdRes, err := movieServiceClient.BoxOfUser(c.Request().Context(), &movies.BoxOfUserRequest{UserId: auth.UserID})
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
-			return c.String(http.StatusPermanentRedirect, "/login")
+			return c.String(http.StatusNotFound, err.Error())
 		}
 
 		return c.String(http.StatusBadRequest, err.Error())
@@ -305,7 +305,7 @@ func LeaveBox(c echo.Context) error {
 	auth, err := Authenticate(c)
 	if err != nil {
 		if status.Code(err) == codes.Unauthenticated {
-			return c.String(http.StatusPermanentRedirect, "/login")
+			return c.String(http.StatusUnauthorized, err.Error())
 		}
 
 		return c.String(http.StatusInternalServerError, err.Error())
@@ -317,7 +317,7 @@ func LeaveBox(c echo.Context) error {
 	boxIdRes, err := movieServiceClient.BoxOfUser(c.Request().Context(), &movies.BoxOfUserRequest{UserId: auth.UserID})
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
-			return c.String(http.StatusPermanentRedirect, "/login")
+			return c.String(http.StatusNotFound, err.Error())
 		}
 
 		return c.String(http.StatusBadRequest, err.Error())
@@ -403,7 +403,7 @@ func CreateBox(c echo.Context) error {
 	auth, err := Authenticate(c)
 	if err != nil {
 		if status.Code(err) == codes.Unauthenticated {
-			return c.Redirect(http.StatusPermanentRedirect, "/login")
+			return c.String(http.StatusUnauthorized, err.Error())
 		}
 
 		return c.String(http.StatusInternalServerError, err.Error())
@@ -413,15 +413,14 @@ func CreateBox(c echo.Context) error {
 
 	msgconn := NewGRPCClientConn(messageServiceAddr)
 	msgServiceClient := messages.NewMessageServiceClient(msgconn)
+	defer msgconn.Close()
 
 	msgRes, err := msgServiceClient.CreateMessageBox(c.Request().Context(), &messages.UserGroup{
 		UserIds: []int64{},
 	})
 	if err != nil {
-		msgconn.Close()
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	msgconn.Close()
 
 	conn := NewGRPCClientConn(movieServiceAddr)
 	movieServiceClient := movies.NewMovieServiceClient(conn)
@@ -515,12 +514,12 @@ func ClientBoxData(c echo.Context) error {
 		UserId: auth.UserID,
 	})
 	if err != nil {
-		return c.String(http.StatusUnauthorized, err.Error())
+		return c.Redirect(http.StatusMovedPermanently, "/lobby")
 	}
 
 	box, err := movieServiceClient.GetBox(c.Request().Context(), boxId)
 	if err != nil {
-		return c.String(http.StatusUnauthorized, err.Error())
+		return c.Redirect(http.StatusMovedPermanently, "/lobby")
 	}
 
 	data := &internal.ClientBoxData{

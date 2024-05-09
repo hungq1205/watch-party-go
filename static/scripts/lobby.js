@@ -25,18 +25,23 @@ form.addEventListener("submit", e => {
             method: 'POST',
             credentials: 'include',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Cache-Control': 'must-revalidate,no-cache,no-store'
             },
             body: data
         }).then(function(res) {
             if (res.status == 201 || res.status == 200) 
-                {
-                    alert("Created");
-                    res.json().then( function(jdata) {
-                        data.append("box_id", jdata["BoxId"])
-                        joinBox(data)
-                    });
-                }
+            {
+                alert("Created");
+                res.json().then( function(jdata) {
+                    data.append("box_id", jdata["BoxId"])
+                    joinBox(data)
+                });
+            }
+            else if (res.status == 401)
+            {
+                window.location.href = 'http://' + webAddr + ':3000/login';
+            }
             else
                 res.text()
                     .then(text => alert(text))
@@ -54,7 +59,8 @@ function joinBox(fdata) {
         method: 'POST',
         credentials: 'include',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Cache-Control': 'must-revalidate,no-cache,no-store'
         },
         body: fdata
     }).then(function(res) {
