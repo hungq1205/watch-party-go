@@ -19,7 +19,9 @@ Người bên trái lập phòng xem phim và người bên phải nhập mã ph
 Sau đó các người dùng có thể xem phim cùng nhau
 
 Mặc dù cùng phòng nhưng người chủ phòng sẽ có quyền cao hơn như điều chỉnh phim, trong khi người tham gia chỉ có thể request chủ phòng dừng phim
+
 ![440813450_1872127009921111_6990629772177419468_n](https://github.com/hungq1205/watch-party/assets/84914589/f7718e27-5a2d-49e7-bc8c-5f52b2ad089f)
 
 Và các người dùng cũng có thể trò chuyện với nhau
+
 ![438328747_1426633691557308_4135359435857859331_n](https://github.com/hungq1205/watch-party/assets/84914589/82cf1915-0c98-417f-a2ba-ccf144e6745a)
